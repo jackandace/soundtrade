@@ -2,26 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@keyframes logoScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 管理画面の文字サイズ可変（design_tokens.md 準拠） */
+:root,
+[data-size="md"] {
+  --font-base: 16px;
+  --font-h1: 28px;
+  --font-h2: 22px;
+  --font-h3: 19px;
+  --font-sm: 14px;
+  --font-xs: 12px;
+}
+[data-size="sm"] {
+  --font-base: 14px;
+  --font-h1: 24px;
+  --font-h2: 20px;
+  --font-h3: 17px;
+  --font-sm: 13px;
+  --font-xs: 11px;
+}
+[data-size="lg"] {
+  --font-base: 18px;
+  --font-h1: 32px;
+  --font-h2: 26px;
+  --font-h3: 22px;
+  --font-sm: 16px;
+  --font-xs: 13px;
+}
+
+html,
+body {
+  width: 100%;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #fafaf7;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* キーボード操作時のみフォーカスリングを表示（マウスクリックでは出さない） */
+:focus-visible {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* 管理画面では navy アクセントに合わせる */
+[data-size] :focus-visible,
+.admin :focus-visible {
+  outline-color: #1b2a41;
+}
+/* main 要素のフォーカスは非表示（スキップリンク用の tabIndex=-1 で発火するため） */
+main:focus-visible {
+  outline: none;
 }

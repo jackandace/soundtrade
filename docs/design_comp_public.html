@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOUND·TRADE — 公開サイト デザインカンプ</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; }
+  body { font-family: 'Noto Sans JP', -apple-system, sans-serif; background: #FAFAF7; }
+  #root { width: 100%; min-height: 100vh; }
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; color: #999; font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">読み込み中…</div></div>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect } = React;
+
+// ============================================================
+// SOUND·TRADE 公開サイト デザインカンプ v2
+// moheim風ミニマルモダン / 完全レスポンシブ対応
+// ============================================================
+
+const C = {
+  ivory:'#FAFAF7', beige:'#F4F0E8', white:'#FFFFFF',
+  sumi:'#1A1A1A', sumiLight:'#555555', gray:'#888888',
+  line:'#E5E5E5', lineMid:'#D5D5D5', accent:'#B8956A',
+  err:'#C84B3D', inStock:'#2E7D32', order:'#9C7C5C',
+};
+
+function useViewport() {
+  const [w, setW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
+  useEffect(() => {
+    const fn = () => setW(window.innerWidth);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return { w, isMobile: w < 768 };
+}
+
+const PRODUCTS = [
+  {handle:'yamaha-ycl-255',cat:'clarinet',catJp:'クラリネット',l3:'B♭&Aクラリネット',name:'YAMAHA YCL-255',price:105000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-ycl-221ii',cat:'clarinet',catJp:'クラリネット',l3:'バスクラリネット',name:'YAMAHA YCL-221II',price:350000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-ycl-681ii',cat:'clarinet',catJp:'クラリネット',l3:'E♭クラリネット',name:'YAMAHA YCL-681II',price:485000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-ycl-csgiii',cat:'clarinet',catJp:'クラリネット',l3:'B♭&Aクラリネット',name:'YAMAHA YCL-CSGIII',price:935000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-ycl-se-artist',cat:'clarinet',catJp:'クラリネット',l3:'B♭&Aクラリネット',name:'YAMAHA YCL-SE Artist',price:1000000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yas-280',cat:'saxophone',catJp:'サクソフォン',l3:'アルトサクソフォン',name:'YAMAHA YAS-280',price:160000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yas-480',cat:'saxophone',catJp:'サクソフォン',l3:'アルトサクソフォン',name:'YAMAHA YAS-480',price:280000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yts-480',cat:'saxophone',catJp:'サクソフォン',l3:'テナーサクソフォン',name:'YAMAHA YTS-480',price:340000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yas-875ex',cat:'saxophone',catJp:'サクソフォン',l3:'アルトサクソフォン',name:'YAMAHA YAS-875EX',price:690000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yss-875ex',cat:'saxophone',catJp:'サクソフォン',l3:'ソプラノサクソフォン',name:'YAMAHA YSS-875EX',price:750000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-ytr-2330',cat:'trumpet',catJp:'トランペット',l3:'B♭トランペット',name:'YAMAHA YTR-2330',price:88000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-ytr-4335gii',cat:'trumpet',catJp:'トランペット',l3:'B♭トランペット',name:'YAMAHA YTR-4335GII',price:165000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-ytr-8335',cat:'trumpet',catJp:'トランペット',l3:'B♭トランペット',name:'YAMAHA YTR-8335',price:430000,series:'カスタム',stock:'in'},
+  {handle:'yamaha-ytr-8345',cat:'trumpet',catJp:'トランペット',l3:'B♭トランペット',name:'YAMAHA YTR-8345',price:445000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-ytr-9335chs',cat:'trumpet',catJp:'トランペット',l3:'トランペット',name:'YAMAHA YTR-9335CHS',price:565000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yfl-212',cat:'flute',catJp:'フルート',l3:'コンサートフルート',name:'YAMAHA YFL-212',price:90000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yfl-312',cat:'flute',catJp:'フルート',l3:'コンサートフルート',name:'YAMAHA YFL-312',price:135000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yfl-517',cat:'flute',catJp:'フルート',l3:'コンサートフルート',name:'YAMAHA YFL-517',price:280000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yfl-677',cat:'flute',catJp:'フルート',l3:'コンサートフルート',name:'YAMAHA YFL-677',price:480000,series:'プロフェッショナル',stock:'order'},
+  {handle:'yamaha-yfl-917c',cat:'flute',catJp:'フルート',l3:'イデアル金製',name:'YAMAHA YFL-917C',price:5081818,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yhr-314ii',cat:'horn',catJp:'ホルン',l3:'シングルホルン',name:'YAMAHA YHR-314II',price:290000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yhr-567',cat:'horn',catJp:'ホルン',l3:'フルダブルホルン',name:'YAMAHA YHR-567',price:450000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yhr-668ii',cat:'horn',catJp:'ホルン',l3:'フルダブルホルン',name:'YAMAHA YHR-668II',price:680000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yhr-871',cat:'horn',catJp:'ホルン',l3:'フルダブルホルン',name:'YAMAHA YHR-871',price:980000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yhr-869d',cat:'horn',catJp:'ホルン',l3:'フルダブルホルン',name:'YAMAHA YHR-869D',price:1150000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-ysl-154',cat:'trombone',catJp:'トロンボーン',l3:'テナートロンボーン',name:'YAMAHA YSL-154',price:125000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-ysl-354',cat:'trombone',catJp:'トロンボーン',l3:'テナートロンボーン',name:'YAMAHA YSL-354',price:155000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-ysl-456g',cat:'trombone',catJp:'トロンボーン',l3:'テナーバストロンボーン',name:'YAMAHA YSL-456G',price:230000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-ysl-882ii',cat:'trombone',catJp:'トロンボーン',l3:'テナーバストロンボーン',name:'YAMAHA YSL-882II',price:540000,series:'カスタム',stock:'in'},
+  {handle:'yamaha-ysl-882gor',cat:'trombone',catJp:'トロンボーン',l3:'テナーバストロンボーン',name:'YAMAHA YSL-882GOR',price:620000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yrf-21',cat:'recorder',catJp:'リコーダー',l3:'ファイフ',name:'YAMAHA YRF-21',price:1100,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yrs-23',cat:'recorder',catJp:'リコーダー',l3:'ソプラノリコーダー',name:'YAMAHA YRS-23',price:1200,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yra-28biii',cat:'recorder',catJp:'リコーダー',l3:'アルトリコーダー',name:'YAMAHA YRA-28BIII',price:3500,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yrb-302bii',cat:'recorder',catJp:'リコーダー',l3:'バスリコーダー',name:'YAMAHA YRB-302BII',price:42000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yrt-304bii',cat:'recorder',catJp:'リコーダー',l3:'テナーリコーダー',name:'YAMAHA YRT-304BII',price:22000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yob-241',cat:'doublereed',catJp:'ダブルリード',l3:'オーボエ',name:'YAMAHA YOB-241',price:420000,series:'スタンダード',stock:'in'},
+  {handle:'yamaha-yob-431',cat:'doublereed',catJp:'ダブルリード',l3:'オーボエ',name:'YAMAHA YOB-431',price:620000,series:'プロフェッショナル',stock:'in'},
+  {handle:'yamaha-yob-831',cat:'doublereed',catJp:'ダブルリード',l3:'オーボエ',name:'YAMAHA YOB-831',price:1080000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-yfg-811',cat:'doublereed',catJp:'ダブルリード',l3:'ファゴット',name:'YAMAHA YFG-811',price:1450000,series:'カスタム',stock:'order'},
+  {handle:'yamaha-ycp-300',cat:'doublereed',catJp:'ダブルリード',l3:'コーラングレ',name:'YAMAHA YCP-300',price:980000,series:'プロフェッショナル',stock:'order'},
+];
+
+const CATEGORIES = [
+  {id:'clarinet',jp:'クラリネット',en:'Clarinet'},
+  {id:'saxophone',jp:'サクソフォン',en:'Saxophone'},
+  {id:'trumpet',jp:'トランペット',en:'Trumpet'},
+  {id:'flute',jp:'フルート',en:'Flute'},
+  {id:'horn',jp:'ホルン',en:'Horn'},
+  {id:'trombone',jp:'トロンボーン',en:'Trombone'},
+  {id:'recorder',jp:'リコーダー',en:'Recorder'},
+  {id:'doublereed',jp:'ダブルリード',en:'Double Reed'},
+];
+
+const MAKERS = [
+  'YAMAHA','Roland','KORG','SUZUKI','Pearl','BUFFET CRAMPON',
+  'Bach','Selmer','MURAMATSU','Jupiter',
+];
+
+// ============================================================
+// 価格表示ポリシー：完全クローズ
+// ----------------------------------------------------------------
+// B2B卸の問い合わせ獲得モデルのため、公開サイトでは価格を一切表示しない。
+// 金額データ（products.msrp 等）はDBに保持し、社内見積・管理画面でのみ使用。
+// 公開サイトでは価格の代わりに「見積依頼へ」ボタンを主役にして
+// 問い合わせへ誘導する。商品ごとの表示切替も設けない（全商品クローズ固定）。
+// ============================================================
+
+// 商品カード等で使う「見積へ誘導」ラベル（価格の代わり）
+function QuoteLabel({ size = 'md' }) {
+  const fs = size === 'sm' ? 12 : 13;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontSize: fs, color: C.accent, letterSpacing: '0.04em', fontWeight: 500,
+    }}>
+      <svg width={fs} height={fs} viewBox="0 0 24 24" fill="none"
+        stroke={C.accent} strokeWidth="1.7">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      お見積もり対応
+    </span>
+  );
+}
+// ============================================================
+// 画像プレースホルダー（実装時に実写真へ差し替え前提）
+// ============================================================
+function ImagePlaceholder({ label, ratio = '1', big = false }) {
+  return (
+    <div style={{
+      background: `repeating-linear-gradient(135deg, ${C.beige}, ${C.beige} 12px, ${C.white} 12px, ${C.white} 24px)`,
+      border: `1px solid ${C.line}`, aspectRatio: ratio,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(250,250,247,0.82)' }} />
+      <div style={{ position: 'relative', textAlign: 'center', padding: 8 }}>
+        <svg width={big ? 44 : 28} height={big ? 44 : 28} viewBox="0 0 24 24" fill="none"
+          stroke={C.gray} strokeWidth="1.3" style={{ marginBottom: 6 }}>
+          <rect x="3" y="3" width="18" height="18" rx="1.5"/>
+          <circle cx="8.5" cy="8.5" r="1.8"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        {label && (
+          <div style={{ fontSize: big ? 12 : 10, color: C.gray, letterSpacing: '0.06em', lineHeight: 1.6 }}>
+            {label}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// メーカーロゴバー（ヘッダー直下・信頼性演出）
+// ============================================================
+function MakerBar({ isMobile }) {
+  return (
+    <div style={{
+      background: C.white, borderBottom: `1px solid ${C.line}`,
+      padding: isMobile ? '13px 0' : '16px 0',
+    }}>
+      <div style={{
+        maxWidth: 1280, margin: '0 auto',
+        padding: isMobile ? '0' : '0 48px',
+        display: 'flex', alignItems: 'center', gap: isMobile ? 0 : 24,
+      }}>
+        {!isMobile && (
+          <div style={{
+            fontSize: 11, color: C.gray, letterSpacing: '0.12em',
+            whiteSpace: 'nowrap', flexShrink: 0, fontFamily: "'DM Sans', sans-serif",
+          }}>取扱メーカー</div>
+        )}
+        <div style={{
+          overflow: 'hidden', flex: 1, position: 'relative',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)',
+          maskImage: 'linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)',
+        }}>
+          <div style={{
+            display: 'flex', gap: isMobile ? 28 : 44, alignItems: 'center',
+            animation: 'logoScroll 30s linear infinite', width: 'max-content',
+          }}>
+            {[...MAKERS, ...MAKERS].map((m, i) => (
+              <div key={i} style={{
+                fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 13 : 15,
+                fontWeight: 500, color: C.sumiLight, letterSpacing: '0.06em',
+                whiteSpace: 'nowrap', opacity: 0.75,
+              }}>{m}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ヘッダー
+// ============================================================
+function Header({ nav, cartCount, onNav, isMobile }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+    <header style={{
+      borderBottom: `1px solid ${C.line}`, background: C.ivory,
+      position: 'sticky', top: 0, zIndex: 50,
+    }}>
+      <div style={{
+        maxWidth: 1280, margin: '0 auto',
+        padding: isMobile ? '0 20px' : '0 48px',
+        height: isMobile ? 64 : 80,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div onClick={() => { onNav('home'); setMenuOpen(false); }} style={{ cursor: 'pointer' }}>
+          <div style={{
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+            fontSize: isMobile ? 18 : 22, letterSpacing: '0.12em', color: C.sumi,
+          }}>SOUND·TRADE</div>
+          {!isMobile && (
+            <div style={{ fontSize: 9, letterSpacing: '0.3em', color: C.gray, marginTop: 2 }}>
+              WHOLESALE INSTRUMENTS
+            </div>
+          )}
+        </div>
+
+        {!isMobile && (
+          <nav style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
+            {[['catalog','カタログ'],['makers','取扱メーカー'],['flow','ご利用の流れ']].map(([id,label]) => (
+              <button key={id} onClick={() => onNav(id === 'catalog' ? 'catalog' : 'home')}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', fontSize: 14,
+                  color: nav === id ? C.sumi : C.sumiLight,
+                  fontWeight: nav === id ? 500 : 400, letterSpacing: '0.04em', padding: '8px 0',
+                  borderBottom: nav === id ? `1px solid ${C.sumi}` : '1px solid transparent',
+                  transition: 'all 300ms ease',
+                }}>{label}</button>
+            ))}
+            <button onClick={() => onNav('cart')} style={{
+              background: 'none', border: `1px solid ${C.sumi}`, cursor: 'pointer',
+              fontSize: 13, color: C.sumi, padding: '10px 20px', letterSpacing: '0.04em',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              見積カート
+              <span style={{
+                background: cartCount > 0 ? C.sumi : C.line,
+                color: cartCount > 0 ? C.white : C.gray,
+                borderRadius: 2, fontSize: 11, padding: '2px 7px', minWidth: 18, textAlign: 'center',
+              }}>{cartCount}</span>
+            </button>
+          </nav>
+        )}
+
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={() => onNav('cart')} style={{
+              background: 'none', border: 'none', cursor: 'pointer', position: 'relative',
+              width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sumi} strokeWidth="1.5">
+                <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
+                <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
+              </svg>
+              {cartCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: 6, right: 4, background: C.sumi, color: C.white,
+                  borderRadius: '50%', fontSize: 10, width: 16, height: 16,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{cartCount}</span>
+              )}
+            </button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.sumi} strokeWidth="1.5">
+                {menuOpen
+                  ? <><path d="M18 6L6 18"/><path d="M6 6l12 12"/></>
+                  : <><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></>}
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isMobile && menuOpen && (
+        <div style={{ borderTop: `1px solid ${C.line}`, background: C.ivory }}>
+          {[['catalog','カタログ'],['makers','取扱メーカー'],['flow','ご利用の流れ'],['cart','見積カート']].map(([id,label]) => (
+            <button key={id} onClick={() => { onNav(id==='catalog'||id==='cart'?id:'home'); setMenuOpen(false); }}
+              style={{
+                width: '100%', textAlign: 'left', background: 'none',
+                border: 'none', borderBottom: `1px solid ${C.line}`, cursor: 'pointer',
+                fontSize: 15, color: C.sumi, padding: '18px 20px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}>
+              {label}<span style={{ color: C.gray }}>→</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </header>
+  );
+}
+
+function Footer({ isMobile }) {
+  return (
+    <footer style={{ borderTop: `1px solid ${C.line}`, background: C.beige }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '48px 20px 32px' : '64px 48px 40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: isMobile ? 32 : 48 }}>
+          <div style={{ maxWidth: isMobile ? '100%' : 280 }}>
+            <div style={{
+              fontFamily: "'DM Sans', sans-serif", fontWeight: 500, fontSize: 18,
+              letterSpacing: '0.12em', color: C.sumi, marginBottom: 12,
+            }}>SOUND·TRADE</div>
+            <p style={{ fontSize: 13, color: C.sumiLight, lineHeight: 1.9, margin: 0 }}>
+              楽器卸取引のための業務用プラットフォーム。確かな品質の楽器を、確かな価格で。
+            </p>
+          </div>
+          <div style={{
+            display: isMobile ? 'grid' : 'flex',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : undefined,
+            gap: isMobile ? 24 : 48,
+          }}>
+            {[
+              ['取扱カテゴリ', CATEGORIES.slice(0,4).map(c=>c.jp)],
+              ['サービス', ['カタログを見る','見積依頼の流れ','取扱メーカー']],
+              ['会社情報', ['運営会社','特定商取引法','プライバシーポリシー','お問い合わせ']],
+            ].map(([title, items]) => (
+              <div key={title}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: C.sumi, letterSpacing: '0.08em', marginBottom: 14 }}>{title}</div>
+                {items.map(it => (
+                  <div key={it} style={{ fontSize: 13, color: C.sumiLight, marginBottom: 9, cursor: 'pointer' }}>{it}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{
+          borderTop: `1px solid ${C.lineMid}`, marginTop: isMobile ? 32 : 48,
+          paddingTop: 24, fontSize: 11, color: C.gray, letterSpacing: '0.04em',
+        }}>© 2026 SOUND·TRADE / 合同会社369. All rights reserved.</div>
+      </div>
+    </footer>
+  );
+}
+
+function StockBadge({ stock }) {
+  const map = {
+    in:    { label: '在庫あり', color: C.inStock },
+    order: { label: '受注生産', color: C.order },
+  };
+  const s = map[stock] || map.in;
+  return (
+    <span style={{
+      fontSize: 11, color: s.color, letterSpacing: '0.06em',
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.color, display: 'inline-block' }} />
+      {s.label}
+    </span>
+  );
+}
+
+function ProductCard({ p, onClick }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      style={{ cursor: 'pointer', transition: 'opacity 300ms ease', opacity: hover ? 0.78 : 1 }}>
+      <div style={{ marginBottom: 14 }}>
+        <ImagePlaceholder label={p.name} />
+      </div>
+      <div style={{ fontSize: 11, color: C.gray, letterSpacing: '0.06em', marginBottom: 5 }}>
+        {p.catJp} / {p.series}
+      </div>
+      <div style={{ fontSize: 14, color: C.sumi, fontWeight: 500, marginBottom: 4, lineHeight: 1.5 }}>
+        {p.name}
+      </div>
+      <div style={{ fontSize: 12, color: C.sumiLight, marginBottom: 10 }}>{p.l3}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <QuoteLabel size="sm" />
+        <StockBadge stock={p.stock} />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// トップページ
+// ============================================================
+function HomePage({ onNav, onProduct, isMobile }) {
+  const secPad = isMobile ? '64px 20px' : '100px 48px';
+  return (
+    <div>
+      <section style={{ background: C.ivory }}>
+        <div style={{
+          maxWidth: 1280, margin: '0 auto',
+          padding: isMobile ? '44px 20px 56px' : '96px 48px',
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1.05fr 0.95fr',
+          gap: isMobile ? 36 : 72, alignItems: 'center',
+        }}>
+          <div style={{ order: isMobile ? 2 : 1 }}>
+            <div style={{
+              fontSize: 11, letterSpacing: '0.2em', color: C.accent, marginBottom: 22,
+              fontFamily: "'DM Sans', sans-serif",
+            }}>B2B WHOLESALE PLATFORM</div>
+            <h1 style={{
+              fontSize: isMobile ? 30 : 44, fontWeight: 300, color: C.sumi,
+              lineHeight: 1.5, letterSpacing: '-0.02em', margin: '0 0 24px',
+            }}>あらゆる楽器を、<br />一つの窓口から。</h1>
+            <p style={{
+              fontSize: isMobile ? 14 : 15, color: C.sumiLight, lineHeight: 2,
+              margin: '0 0 32px', maxWidth: 440,
+            }}>
+              管楽器・弦楽器・打楽器——主要メーカーの楽器をまとめて取り扱う卸プラットフォーム。
+              楽器店・スタジオ・教育機関のお客様に、確かな品質と価格でお応えします。
+            </p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button onClick={() => onNav('catalog')} style={{
+                background: C.sumi, color: C.white, border: `1px solid ${C.sumi}`,
+                padding: isMobile ? '15px 28px' : '16px 36px', fontSize: 14,
+                letterSpacing: '0.06em', cursor: 'pointer', flex: isMobile ? 1 : 'none',
+              }}>カタログを見る</button>
+              <button onClick={() => onNav('home')} style={{
+                background: 'transparent', color: C.sumi, border: `1px solid ${C.lineMid}`,
+                padding: isMobile ? '15px 28px' : '16px 36px', fontSize: 14,
+                letterSpacing: '0.06em', cursor: 'pointer', flex: isMobile ? 1 : 'none',
+              }}>ご利用の流れ</button>
+            </div>
+          </div>
+          <div style={{ order: isMobile ? 1 : 2 }}>
+            <ImagePlaceholder
+              label={isMobile ? '楽器が並ぶ卸の写真' : 'メインビジュアル / 楽器が一堂に並ぶ卸倉庫の実写真が入ります'}
+              ratio={isMobile ? '4/3' : '1'} big
+            />
+          </div>
+        </div>
+      </section>
+
+      <section style={{ background: C.white, borderTop: `1px solid ${C.line}` }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: secPad }}>
+          <div style={{ marginBottom: isMobile ? 36 : 56 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.2em', color: C.accent, marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>CATEGORY</div>
+            <h2 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 400, color: C.sumi, margin: 0, letterSpacing: '-0.01em' }}>取扱カテゴリ</h2>
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+            gap: 1, background: C.line, border: `1px solid ${C.line}`,
+          }}>
+            {CATEGORIES.map(c => (
+              <div key={c.id} onClick={() => onNav('catalog')}
+                style={{
+                  background: C.ivory, padding: isMobile ? '24px 14px' : '36px 24px',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', gap: 12,
+                }}>
+                <div style={{ width: isMobile ? 60 : 80 }}>
+                  <ImagePlaceholder label="" ratio="1" />
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: isMobile ? 13 : 14, color: C.sumi, fontWeight: 500 }}>{c.jp}</div>
+                  <div style={{ fontSize: 9, color: C.gray, letterSpacing: '0.1em', marginTop: 3, fontFamily: "'DM Sans', sans-serif" }}>{c.en.toUpperCase()}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ background: C.ivory, borderTop: `1px solid ${C.line}` }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: secPad }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            alignItems: 'flex-end', marginBottom: isMobile ? 32 : 56,
+          }}>
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: '0.2em', color: C.accent, marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>FEATURED</div>
+              <h2 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 400, color: C.sumi, margin: 0, letterSpacing: '-0.01em' }}>注目の商品</h2>
+            </div>
+            <button onClick={() => onNav('catalog')} style={{
+              background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: C.sumi,
+              borderBottom: `1px solid ${C.sumi}`, paddingBottom: 3, letterSpacing: '0.04em', whiteSpace: 'nowrap',
+            }}>すべて見る</button>
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+            gap: isMobile ? 20 : 40,
+          }}>
+            {[PRODUCTS[3], PRODUCTS[8], PRODUCTS[14], PRODUCTS[24]].map(p => (
+              <ProductCard key={p.handle} p={p} onClick={() => onProduct(p)} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ background: C.white, borderTop: `1px solid ${C.line}` }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: secPad }}>
+          <div style={{ marginBottom: isMobile ? 32 : 56 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.2em', color: C.accent, marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>HOW IT WORKS</div>
+            <h2 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 400, color: C.sumi, margin: 0, letterSpacing: '-0.01em' }}>ご利用の流れ</h2>
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
+            gap: isMobile ? 20 : 40,
+          }}>
+            {[
+              ['01','商品を探す','カテゴリやメーカーから商品を検索します'],
+              ['02','カートに追加','見積もりを取りたい商品をカートに入れます'],
+              ['03','見積依頼','会社情報を入力して見積もりを依頼します'],
+              ['04','見積回答','担当者より見積書をお送りします'],
+            ].map(([num,title,desc]) => (
+              <div key={num} style={isMobile ? {
+                display: 'flex', gap: 16, alignItems: 'flex-start',
+                paddingBottom: 20, borderBottom: `1px solid ${C.line}`,
+              } : {}}>
+                <div style={{
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: C.accent,
+                  letterSpacing: '0.1em', marginBottom: isMobile ? 0 : 16,
+                  paddingBottom: isMobile ? 0 : 16,
+                  borderBottom: isMobile ? 'none' : `1px solid ${C.line}`, flexShrink: 0,
+                }}>{num}</div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: C.sumi, marginBottom: 8 }}>{title}</div>
+                  <div style={{ fontSize: 13, color: C.sumiLight, lineHeight: 1.9 }}>{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ============================================================
+// カタログページ
+// ============================================================
+function CatalogPage({ onProduct, isMobile }) {
+  const [catFilter, setCatFilter] = useState('all');
+  const [sort, setSort] = useState('default');
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const filtered = useMemo(() => {
+    let list = catFilter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === catFilter);
+    if (sort === 'price-asc') list = [...list].sort((a,b) => a.price - b.price);
+    if (sort === 'price-desc') list = [...list].sort((a,b) => b.price - a.price);
+    return list;
+  }, [catFilter, sort]);
+
+  const FilterList = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <FilterItem label="すべて" count={PRODUCTS.length} active={catFilter==='all'}
+        onClick={() => { setCatFilter('all'); setFilterOpen(false); }} />
+      {CATEGORIES.map(c => (
+        <FilterItem key={c.id} label={c.jp}
+          count={PRODUCTS.filter(p=>p.cat===c.id).length}
+          active={catFilter===c.id}
+          onClick={() => { setCatFilter(c.id); setFilterOpen(false); }} />
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{ background: C.ivory, minHeight: '70vh' }}>
+      <div style={{
+        maxWidth: 1280, margin: '0 auto',
+        padding: isMobile ? '32px 20px 64px' : '64px 48px 100px',
+      }}>
+        <div style={{ fontSize: 12, color: C.gray, marginBottom: isMobile ? 20 : 32, letterSpacing: '0.04em' }}>
+          ホーム ／ カタログ
+        </div>
+        <h1 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 300, color: C.sumi, margin: '0 0 8px', letterSpacing: '-0.01em' }}>
+          商品カタログ
+        </h1>
+        <p style={{ fontSize: 13, color: C.sumiLight, margin: '0 0 32px' }}>
+          全 {filtered.length} 件の楽器を取り扱っています
+        </p>
+
+        {isMobile && (
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+            <button onClick={() => setFilterOpen(true)} style={{
+              flex: 1, border: `1px solid ${C.lineMid}`, background: C.white,
+              padding: '13px', fontSize: 13, color: C.sumi, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 46,
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.sumi} strokeWidth="1.6">
+                <path d="M4 6h16M7 12h10M10 18h4"/>
+              </svg>
+              絞り込み
+            </button>
+            <select value={sort} onChange={e => setSort(e.target.value)} style={{
+              flex: 1, border: `1px solid ${C.lineMid}`, background: C.white,
+              padding: '13px', fontSize: 13, color: C.sumi, cursor: 'pointer', minHeight: 46,
+            }}>
+              <option value="default">おすすめ順</option>
+              <option value="price-asc">価格が安い順</option>
+              <option value="price-desc">価格が高い順</option>
+            </select>
+          </div>
+        )}
+
+        {isMobile ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {filtered.map(p => <ProductCard key={p.handle} p={p} onClick={() => onProduct(p)} />)}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 56 }}>
+            <aside>
+              <div style={{ fontSize: 12, fontWeight: 500, color: C.sumi, letterSpacing: '0.08em', marginBottom: 18, paddingBottom: 12, borderBottom: `1px solid ${C.line}` }}>
+                カテゴリ
+              </div>
+              <FilterList />
+            </aside>
+            <div>
+              <div style={{
+                display: 'flex', justifyContent: 'flex-end', marginBottom: 32,
+                paddingBottom: 16, borderBottom: `1px solid ${C.line}`,
+              }}>
+                <select value={sort} onChange={e => setSort(e.target.value)} style={{
+                  border: `1px solid ${C.lineMid}`, background: C.white, padding: '8px 14px',
+                  fontSize: 13, color: C.sumi, cursor: 'pointer',
+                }}>
+                  <option value="default">おすすめ順</option>
+                  <option value="price-asc">価格が安い順</option>
+                  <option value="price-desc">価格が高い順</option>
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40 }}>
+                {filtered.map(p => <ProductCard key={p.handle} p={p} onClick={() => onProduct(p)} />)}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {isMobile && filterOpen && (
+        <div onClick={() => setFilterOpen(false)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(26,26,26,0.4)', zIndex: 100,
+          display: 'flex', alignItems: 'flex-end',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: C.ivory, width: '100%', borderRadius: '8px 8px 0 0',
+            padding: '24px 20px 32px', maxHeight: '70vh', overflowY: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div style={{ fontSize: 15, fontWeight: 500, color: C.sumi }}>カテゴリで絞り込み</div>
+              <button onClick={() => setFilterOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: C.gray, width: 44, height: 44 }}>×</button>
+            </div>
+            <FilterList />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterItem({ label, count, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      background: active ? C.beige : 'transparent', border: 'none', cursor: 'pointer',
+      padding: '13px 12px', fontSize: 14, minHeight: 44,
+      color: active ? C.sumi : C.sumiLight, fontWeight: active ? 500 : 400,
+      transition: 'all 200ms ease', textAlign: 'left', width: '100%',
+    }}>
+      <span>{label}</span>
+      <span style={{ fontSize: 11, color: C.gray }}>{count}</span>
+    </button>
+  );
+}
+
+// ============================================================
+// 商品詳細ページ
+// ============================================================
+function ProductPage({ product, onAddCart, onBack, inCart, isMobile }) {
+  const [qty, setQty] = useState(1);
+  return (
+    <div style={{ background: C.ivory, minHeight: '70vh' }}>
+      <div style={{
+        maxWidth: 1280, margin: '0 auto',
+        padding: isMobile ? '24px 20px 64px' : '64px 48px 100px',
+      }}>
+        <div style={{ fontSize: 12, color: C.gray, marginBottom: isMobile ? 24 : 40, letterSpacing: '0.04em' }}>
+          <span onClick={onBack} style={{ cursor: 'pointer' }}>カタログ</span>
+          {' / '}{product.catJp}{!isMobile && ` / ${product.name}`}
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: isMobile ? 32 : 72,
+        }}>
+          <div>
+            <div style={{ marginBottom: 12 }}>
+              <ImagePlaceholder label={`${product.name} の商品写真`} big />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+              {[0,1,2,3].map(i => (
+                <div key={i} style={{ border: i===0 ? `1px solid ${C.sumi}` : 'none' }}>
+                  <ImagePlaceholder label="" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, color: C.gray, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+              {product.catJp.toUpperCase()} / {product.series}
+            </div>
+            <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight: 400, color: C.sumi, margin: '0 0 8px', letterSpacing: '-0.01em' }}>
+              {product.name}
+            </h1>
+            <div style={{ fontSize: 14, color: C.sumiLight, marginBottom: 20 }}>{product.l3}</div>
+
+            <div style={{ marginBottom: 24 }}>
+              <StockBadge stock={product.stock} />
+            </div>
+
+            {/* 主な仕様 */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: C.sumi, marginBottom: 12, letterSpacing: '0.04em' }}>
+                主な仕様
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  {[
+                    ['シリーズ', product.series],
+                    ['カテゴリ', product.l3],
+                    ['管体材質', 'グラナディラ / 洋白'],
+                    ['仕上げ', '銀メッキ'],
+                    ['付属品', 'ハードケース / マウスピース'],
+                  ].map(([k,v]) => (
+                    <tr key={k} style={{ borderBottom: `1px solid ${C.line}` }}>
+                      <td style={{ padding: '11px 0', fontSize: 13, color: C.sumiLight, width: 110, verticalAlign: 'top' }}>{k}</td>
+                      <td style={{ padding: '11px 0', fontSize: 13, color: C.sumi }}>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 見積アクションブロック（価格の代わりに主役化） */}
+            <div style={{
+              background: C.white, border: `1px solid ${C.line}`,
+              padding: isMobile ? 20 : 24, marginBottom: 16,
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+                fontSize: isMobile ? 16 : 17, color: C.sumi, fontWeight: 500,
+              }}>
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.7">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                お見積もりでご案内します
+              </div>
+              <p style={{ fontSize: 12, color: C.sumiLight, lineHeight: 1.85, margin: '0 0 18px' }}>
+                卸価格はお取引内容・数量に応じて個別にご案内しております。
+                数量を選んで見積カートに追加し、まとめて見積依頼へお進みください。
+              </p>
+
+              {/* 数量 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                <span style={{ fontSize: 13, color: C.sumiLight }}>数量</span>
+                <div style={{ display: 'flex', border: `1px solid ${C.lineMid}` }}>
+                  <button onClick={() => setQty(Math.max(1,qty-1))} style={{
+                    width: 44, height: 44, background: C.ivory, border: 'none', cursor: 'pointer', fontSize: 18, color: C.sumi,
+                  }}>-</button>
+                  <div style={{ width: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, color: C.sumi, borderLeft: `1px solid ${C.line}`, borderRight: `1px solid ${C.line}` }}>{qty}</div>
+                  <button onClick={() => setQty(qty+1)} style={{
+                    width: 44, height: 44, background: C.ivory, border: 'none', cursor: 'pointer', fontSize: 18, color: C.sumi,
+                  }}>+</button>
+                </div>
+              </div>
+
+              {/* 見積カートに追加（メインCTA） */}
+              <button onClick={() => onAddCart(product, qty)} disabled={inCart}
+                style={{
+                  width: '100%', minHeight: 54,
+                  background: inCart ? C.beige : C.sumi,
+                  color: inCart ? C.sumiLight : C.white,
+                  border: `1px solid ${inCart ? C.lineMid : C.sumi}`,
+                  fontSize: 15, fontWeight: 500, letterSpacing: '0.06em',
+                  cursor: inCart ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                {!inCart && (
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={C.white} strokeWidth="1.8">
+                    <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
+                    <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
+                  </svg>
+                )}
+                {inCart ? '見積カートに追加済み' : '見積カートに追加する'}
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12, color: C.gray, lineHeight: 1.9, margin: 0 }}>
+              ※ 卸価格は見積依頼後に担当者よりご案内します。
+              受注生産品は納期に4〜8週間程度を要する場合があります。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 見積カートページ
+// ============================================================
+function CartPage({ cart, onQty, onRemove, onNav, isMobile }) {
+  const totalQty = cart.reduce((s,i) => s + i.qty, 0);
+
+  if (cart.length === 0) {
+    return (
+      <div style={{ background: C.ivory, minHeight: '70vh' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '48px 20px' : '64px 48px 100px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: isMobile ? 26 : 32, fontWeight: 300, color: C.sumi, margin: '60px 0 16px' }}>見積カート</h1>
+          <p style={{ fontSize: 14, color: C.sumiLight, marginBottom: 36 }}>カートに商品がありません。</p>
+          <button onClick={() => onNav('catalog')} style={{
+            background: C.sumi, color: C.white, border: `1px solid ${C.sumi}`,
+            padding: '15px 36px', fontSize: 14, letterSpacing: '0.06em', cursor: 'pointer',
+          }}>カタログを見る</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: C.ivory, minHeight: '70vh' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '32px 20px 64px' : '64px 48px 100px' }}>
+        <div style={{ fontSize: 12, color: C.gray, marginBottom: isMobile ? 20 : 32, letterSpacing: '0.04em' }}>ホーム ／ 見積カート</div>
+        <h1 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 300, color: C.sumi, margin: '0 0 8px' }}>見積カート</h1>
+        <p style={{ fontSize: 13, color: C.sumiLight, margin: '0 0 32px' }}>{cart.length} 商品 / 合計 {totalQty} 点</p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 340px',
+          gap: isMobile ? 24 : 56, alignItems: 'start',
+        }}>
+          <div style={{ border: `1px solid ${C.line}`, background: C.white }}>
+            {cart.map((item, i) => (
+              <div key={item.handle} style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '72px 1fr' : '90px 1fr auto',
+                gap: isMobile ? 14 : 24,
+                padding: isMobile ? 16 : 24,
+                borderBottom: i < cart.length-1 ? `1px solid ${C.line}` : 'none',
+                alignItems: isMobile ? 'start' : 'center',
+              }}>
+                <div style={{ width: isMobile ? 72 : 90 }}>
+                  <ImagePlaceholder label="" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: C.gray, marginBottom: 4 }}>{item.catJp} / {item.series}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: C.sumi, marginBottom: 4 }}>{item.name}</div>
+                  <div style={{ fontSize: 13, color: C.sumiLight }}>
+                    見積価格をご案内します
+                  </div>
+                  {isMobile && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                      <div style={{ display: 'flex', border: `1px solid ${C.lineMid}` }}>
+                        <button onClick={() => onQty(item.handle, Math.max(1,item.qty-1))} style={{ width: 40, height: 40, background: C.white, border: 'none', cursor: 'pointer', fontSize: 16 }}>−</button>
+                        <div style={{ width: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, borderLeft: `1px solid ${C.line}`, borderRight: `1px solid ${C.line}` }}>{item.qty}</div>
+                        <button onClick={() => onQty(item.handle, item.qty+1)} style={{ width: 40, height: 40, background: C.white, border: 'none', cursor: 'pointer', fontSize: 16 }}>＋</button>
+                      </div>
+                      <button onClick={() => onRemove(item.handle)} style={{
+                        background: 'none', border: 'none', cursor: 'pointer', fontSize: 12,
+                        color: C.gray, borderBottom: `1px solid ${C.line}`, paddingBottom: 2,
+                      }}>削除</button>
+                    </div>
+                  )}
+                </div>
+                {!isMobile && (
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', border: `1px solid ${C.lineMid}`, marginBottom: 10 }}>
+                      <button onClick={() => onQty(item.handle, Math.max(1,item.qty-1))} style={{ width: 36, height: 36, background: C.white, border: 'none', cursor: 'pointer', fontSize: 15 }}>−</button>
+                      <div style={{ width: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, borderLeft: `1px solid ${C.line}`, borderRight: `1px solid ${C.line}` }}>{item.qty}</div>
+                      <button onClick={() => onQty(item.handle, item.qty+1)} style={{ width: 36, height: 36, background: C.white, border: 'none', cursor: 'pointer', fontSize: 15 }}>＋</button>
+                    </div>
+                    <button onClick={() => onRemove(item.handle)} style={{
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: 11,
+                      color: C.gray, borderBottom: `1px solid ${C.line}`, paddingBottom: 2,
+                    }}>削除</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ border: `1px solid ${C.line}`, background: C.white, padding: isMobile ? 20 : 28 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: C.sumi, marginBottom: 18, letterSpacing: '0.04em' }}>
+              見積サマリー
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: C.sumiLight, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.line}` }}>
+              <span>商品点数</span><span style={{ color: C.sumi, fontWeight: 500 }}>{totalQty} 点</span>
+            </div>
+            <p style={{ fontSize: 12, color: C.sumiLight, lineHeight: 1.9, marginBottom: 18 }}>
+              卸価格はお取引内容・数量に応じて個別にご案内しております。
+              下記より見積をご依頼ください。担当者が2営業日以内にお見積もりをお送りします。
+            </p>
+            {/* メインCTA：見積依頼へ（価格の代わりに最も目立たせる） */}
+            <button onClick={() => onNav('inquiry')} style={{
+              width: '100%', minHeight: 56, background: C.sumi, color: C.white,
+              border: `1px solid ${C.sumi}`, padding: '16px',
+              fontSize: 15, fontWeight: 500, letterSpacing: '0.06em', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.white} strokeWidth="1.8">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              見積依頼へ進む
+            </button>
+            <button onClick={() => onNav('catalog')} style={{
+              width: '100%', background: 'transparent', color: C.sumi, border: `1px solid ${C.lineMid}`,
+              padding: '14px', fontSize: 13, letterSpacing: '0.04em', cursor: 'pointer', marginTop: 12,
+            }}>買い物を続ける</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 見積依頼フォームページ
+// ============================================================
+function InquiryPage({ cart, onNav, isMobile }) {
+  const [done, setDone] = useState(false);
+
+  if (done) {
+    return (
+      <div style={{ background: C.ivory, minHeight: '70vh' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: isMobile ? '80px 20px' : '120px 48px', textAlign: 'center' }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%', border: `1.5px solid ${C.inStock}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px',
+            fontSize: 24, color: C.inStock,
+          }}>✓</div>
+          <h1 style={{ fontSize: isMobile ? 24 : 28, fontWeight: 300, color: C.sumi, margin: '0 0 16px' }}>
+            見積依頼を受け付けました
+          </h1>
+          <p style={{ fontSize: 14, color: C.sumiLight, lineHeight: 2, marginBottom: 8 }}>
+            受付番号 <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: C.sumi }}>ST-20260520-0042</span>
+          </p>
+          <p style={{ fontSize: 13, color: C.sumiLight, lineHeight: 2, marginBottom: 36 }}>
+            ご入力のメールアドレスに確認メールをお送りしました。<br />
+            担当者より2営業日以内に見積書をお送りいたします。
+          </p>
+          <button onClick={() => onNav('home')} style={{
+            background: C.sumi, color: C.white, border: `1px solid ${C.sumi}`,
+            padding: '15px 36px', fontSize: 14, letterSpacing: '0.06em', cursor: 'pointer',
+          }}>トップへ戻る</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: C.ivory, minHeight: '70vh' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '32px 20px 64px' : '64px 48px 100px' }}>
+        <div style={{ fontSize: 12, color: C.gray, marginBottom: isMobile ? 20 : 32, letterSpacing: '0.04em' }}>
+          ホーム ／ 見積カート ／ 見積依頼
+        </div>
+        <h1 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 300, color: C.sumi, margin: '0 0 32px' }}>見積依頼フォーム</h1>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 340px',
+          gap: isMobile ? 24 : 56, alignItems: 'start',
+        }}>
+          <div style={{ border: `1px solid ${C.line}`, background: C.white, padding: isMobile ? 24 : 40, order: isMobile ? 2 : 1 }}>
+            <div style={{ display: 'grid', gap: 22 }}>
+              {[
+                ['会社名 / 屋号', '株式会社サウンドミュージック', true],
+                ['ご担当者名', '山田 太郎', true],
+                ['メールアドレス', 'yamada@example.com', true],
+                ['電話番号', '03-1234-5678', true],
+              ].map(([label, ph, req]) => (
+                <Field key={label} label={label} placeholder={ph} required={req} />
+              ))}
+              <div>
+                <FieldLabel label="希望納期" />
+                <select style={inputStyle}>
+                  <option>できるだけ早く</option>
+                  <option>1ヶ月以内</option>
+                  <option>2〜3ヶ月以内</option>
+                  <option>未定 / 相談したい</option>
+                </select>
+              </div>
+              <div>
+                <FieldLabel label="ご要望・備考" />
+                <textarea rows={4} placeholder="数量の相談、納品先のご指定などがあればご記入ください"
+                  style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ border: `1px solid ${C.line}`, background: C.white, padding: isMobile ? 20 : 28, order: isMobile ? 1 : 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: C.sumi, marginBottom: 18, letterSpacing: '0.04em' }}>
+              依頼内容（{cart.length}商品）
+            </div>
+            {cart.map(item => (
+              <div key={item.handle} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 11, gap: 12 }}>
+                <span style={{ color: C.sumi }}>{item.name}<span style={{ color: C.gray }}> ×{item.qty}</span></span>
+              </div>
+            ))}
+            <div style={{
+              fontSize: 11, color: C.sumiLight, lineHeight: 1.8, paddingTop: 16,
+              marginTop: 8, borderTop: `1px solid ${C.line}`,
+            }}>
+              上記 {cart.length} 商品について、担当者よりお見積もりをご案内いたします。
+            </div>
+            <button onClick={() => setDone(true)} style={{
+              width: '100%', background: C.sumi, color: C.white, border: `1px solid ${C.sumi}`,
+              padding: '16px', fontSize: 14, letterSpacing: '0.06em', cursor: 'pointer', marginTop: 22,
+            }}>この内容で見積を依頼する</button>
+            <p style={{ fontSize: 11, color: C.gray, lineHeight: 1.8, marginTop: 14, textAlign: 'center' }}>
+              送信により<span style={{ borderBottom: `1px solid ${C.gray}` }}>プライバシーポリシー</span>に同意したものとみなします
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const inputStyle = {
+  width: '100%', border: `1px solid ${C.lineMid}`, background: C.white,
+  padding: '14px', fontSize: 15, color: C.sumi, boxSizing: 'border-box', minHeight: 48,
+};
+
+function FieldLabel({ label, required }) {
+  return (
+    <div style={{ fontSize: 13, color: C.sumi, marginBottom: 8, fontWeight: 500 }}>
+      {label}
+      {required && <span style={{ color: C.err, fontSize: 11, marginLeft: 8 }}>必須</span>}
+    </div>
+  );
+}
+
+function Field({ label, placeholder, required }) {
+  return (
+    <div>
+      <FieldLabel label={label} required={required} />
+      <input placeholder={placeholder} style={inputStyle} />
+    </div>
+  );
+}
+
+// ============================================================
+// ルートApp
+// ============================================================
+function App() {
+  const { isMobile } = useViewport();
+  const [page, setPage] = useState('home');
+  const [product, setProduct] = useState(null);
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => { window.scrollTo(0, 0); }, [page, product]);
+
+  const addToCart = (p, qty) => {
+    setCart(prev => prev.find(i => i.handle === p.handle) ? prev : [...prev, { ...p, qty }]);
+  };
+  const updateQty = (handle, qty) =>
+    setCart(prev => prev.map(i => i.handle === handle ? { ...i, qty } : i));
+  const removeItem = (handle) =>
+    setCart(prev => prev.filter(i => i.handle !== handle));
+  const goProduct = (p) => { setProduct(p); setPage('product'); };
+
+  return (
+    <div style={{
+      fontFamily: "'Noto Sans JP', -apple-system, sans-serif",
+      background: C.ivory, minHeight: '100vh', color: C.sumi,
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+        * { box-sizing: border-box; }
+        button { font-family: inherit; }
+        select, input, textarea { font-family: 'Noto Sans JP', sans-serif; outline: none; }
+        select:focus, input:focus, textarea:focus { border-color: ${C.sumi}; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: ${C.lineMid}; }
+        @keyframes logoScroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
+
+      <Header
+        nav={page === 'product' ? 'catalog' : page}
+        cartCount={cart.reduce((s,i)=>s+i.qty,0)}
+        onNav={setPage}
+        isMobile={isMobile}
+      />
+      <MakerBar isMobile={isMobile} />
+
+      {page === 'home' && <HomePage onNav={setPage} onProduct={goProduct} isMobile={isMobile} />}
+      {page === 'catalog' && <CatalogPage onProduct={goProduct} isMobile={isMobile} />}
+      {page === 'product' && product && (
+        <ProductPage
+          product={product} onAddCart={addToCart}
+          onBack={() => setPage('catalog')}
+          inCart={!!cart.find(i => i.handle === product.handle)}
+          isMobile={isMobile}
+        />
+      )}
+      {page === 'cart' && (
+        <CartPage cart={cart} onQty={updateQty} onRemove={removeItem} onNav={setPage} isMobile={isMobile} />
+      )}
+      {page === 'inquiry' && (
+        <InquiryPage cart={cart} onNav={setPage} isMobile={isMobile} />
+      )}
+
+      <Footer isMobile={isMobile} />
+
+      <div style={{
+        position: 'fixed', bottom: 12, right: 12, background: C.sumi, color: C.white,
+        fontSize: 10, padding: '7px 13px', letterSpacing: '0.04em', borderRadius: 3, opacity: 0.85,
+      }}>
+        DESIGN COMP v2 — 公開サイト / 価格クローズ
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(App, null)
+);
+</script>
+</body>
+</html>

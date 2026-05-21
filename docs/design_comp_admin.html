@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOUND·TRADE — 管理画面 デザインカンプ</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; }
+  body { font-family: 'Noto Sans JP', -apple-system, sans-serif; background: #F0F1F3; }
+  #root { width: 100%; min-height: 100vh; }
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; color: #999; font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">読み込み中…</div></div>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect } = React;
+
+// ============================================================
+// SOUND·TRADE 管理画面 デザインカンプ
+// ユニバーサルデザイン / CUDカラー / 文字サイズ可変
+// ============================================================
+
+// ---- CUD準拠カラー ----
+const C = {
+  bg:       '#F0F1F3',   // アプリ背景
+  surface:  '#FFFFFF',   // カード・パネル
+  surfaceAlt:'#F7F8FA',  // 薄いグレー面
+  ink:      '#1A1A1A',   // 本文
+  inkSub:   '#555555',   // サブ
+  inkMute:  '#777777',   // 補助
+  line:     '#D5D8DC',   // 罫線
+  lineLight:'#E8EAED',
+  // CUDステータスカラー
+  success:  '#2E7D32',   // 成功・公開中・正常
+  successBg:'#E8F3E9',
+  warning:  '#F4A300',   // 警告・下書き・要確認
+  warningBg:'#FCF2DC',
+  danger:   '#D52941',   // エラー・未公開・不整合
+  dangerBg: '#FBE4E7',
+  info:     '#1976D2',   // 情報・処理中
+  infoBg:   '#E4EFFB',
+  neutral:  '#6C757D',   // 中立・無効
+  neutralBg:'#EBECEE',
+  // ブランド
+  navy:     '#1B2A41',   // サイドバー
+  navyHover:'#2A3F5F',
+};
+
+// 文字サイズ3段階（design_tokens.md準拠）
+const FONT_SCALE = {
+  sm: { base: 14, h1: 24, h2: 20, h3: 17, label: 'A-' },
+  md: { base: 16, h1: 28, h2: 22, h3: 19, label: 'A' },
+  lg: { base: 18, h1: 32, h2: 26, h3: 22, label: 'A+' },
+};
+
+const yen = (n) => '¥' + n.toLocaleString('ja-JP');
+
+// ============================================================
+// アイコン（CUD：色だけに頼らずアイコンを併用）
+// ============================================================
+const Icon = {
+  dashboard: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><rect x="3" y="3" width="8" height="9"/><rect x="13" y="3" width="8" height="5"/><rect x="13" y="10" width="8" height="11"/><rect x="3" y="14" width="8" height="7"/></svg>,
+  box: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8"/></svg>,
+  upload: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>,
+  diff: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><path d="M12 3v18M5 8l-2 4 2 4M19 8l2 4-2 4"/></svg>,
+  check: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><path d="M22 11.5V12a10 10 0 1 1-5.9-9.1M22 4L12 14.1l-3-3"/></svg>,
+  inquiry: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  ok: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2"><path d="M20 6L9 17l-5-5"/></svg>,
+  warn: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>,
+  error: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>,
+  info: (s,c) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>,
+};
+
+// ============================================================
+// ステータスバッジ（色 + アイコン + テキストの三重表現）
+// ============================================================
+function StatusBadge({ type, label, fs }) {
+  const map = {
+    success: { c: C.success, bg: C.successBg, icon: Icon.ok },
+    warning: { c: C.warning, bg: C.warningBg, icon: Icon.warn },
+    danger:  { c: C.danger,  bg: C.dangerBg,  icon: Icon.error },
+    info:    { c: C.info,    bg: C.infoBg,    icon: Icon.info },
+    neutral: { c: C.neutral, bg: C.neutralBg, icon: Icon.info },
+  };
+  const s = map[type] || map.neutral;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      background: s.bg, color: s.c, border: `1px solid ${s.c}40`,
+      padding: '4px 9px', borderRadius: 4, fontSize: fs.base - 3,
+      fontWeight: 700, whiteSpace: 'nowrap',
+    }}>
+      {s.icon(fs.base - 3, s.c)}
+      {label}
+    </span>
+  );
+}
+
+// ============================================================
+// サイドバー
+// ============================================================
+function Sidebar({ page, onNav, fs }) {
+  const items = [
+    ['dashboard', 'ダッシュボード', Icon.dashboard],
+    ['products',  '商品マスタ',     Icon.box],
+    ['import',    'CSV取込',        Icon.upload],
+    ['preview',   '差分プレビュー', Icon.diff],
+    ['approve',   '反映承認',       Icon.check],
+    ['inquiries', '見積依頼',       Icon.inquiry],
+  ];
+  return (
+    <aside style={{
+      width: 240, background: C.navy, minHeight: '100vh',
+      flexShrink: 0, display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: fs.base + 3, letterSpacing: '0.06em' }}>
+          SOUND·TRADE
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: fs.base - 4, marginTop: 3 }}>
+          管理画面
+        </div>
+      </div>
+      <nav style={{ padding: '12px 0', flex: 1 }}>
+        {items.map(([id, label, icon]) => {
+          const active = page === id;
+          return (
+            <button key={id} onClick={() => onNav(id)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                padding: '14px 20px', minHeight: 48, border: 'none', cursor: 'pointer',
+                background: active ? C.navyHover : 'transparent',
+                borderLeft: active ? '4px solid #FFFFFF' : '4px solid transparent',
+                color: active ? '#FFFFFF' : 'rgba(255,255,255,0.75)',
+                fontSize: fs.base, fontWeight: active ? 700 : 400,
+                textAlign: 'left', transition: 'all 150ms ease',
+              }}>
+              {icon(fs.base + 3, active ? '#FFFFFF' : 'rgba(255,255,255,0.75)')}
+              {label}
+            </button>
+          );
+        })}
+      </nav>
+      <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%', background: C.navyHover,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#FFFFFF', fontSize: fs.base - 2, fontWeight: 700,
+          }}>鈴</div>
+          <div>
+            <div style={{ color: '#FFFFFF', fontSize: fs.base - 2, fontWeight: 500 }}>鈴木 淳司</div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: fs.base - 5 }}>管理者</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ============================================================
+// トップバー（文字サイズ切替を常設）
+// ============================================================
+function TopBar({ title, sizeKey, onSize, fs }) {
+  return (
+    <div style={{
+      background: C.surface, borderBottom: `1px solid ${C.line}`,
+      padding: '0 32px', height: 68, display: 'flex',
+      alignItems: 'center', justifyContent: 'space-between',
+    }}>
+      <h1 style={{ fontSize: fs.h2, fontWeight: 700, color: C.ink, margin: 0 }}>
+        {title}
+      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        {/* 文字サイズ切替 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: fs.base - 3, color: C.inkSub }}>文字サイズ</span>
+          <div style={{ display: 'flex', border: `1px solid ${C.line}`, borderRadius: 6, overflow: 'hidden' }}>
+            {Object.entries(FONT_SCALE).map(([k, v]) => (
+              <button key={k} onClick={() => onSize(k)}
+                aria-pressed={sizeKey === k}
+                style={{
+                  minWidth: 44, minHeight: 40, border: 'none', cursor: 'pointer',
+                  background: sizeKey === k ? C.navy : C.surface,
+                  color: sizeKey === k ? '#FFFFFF' : C.inkSub,
+                  fontSize: k === 'sm' ? 12 : k === 'md' ? 15 : 18,
+                  fontWeight: 700,
+                  borderRight: k !== 'lg' ? `1px solid ${C.line}` : 'none',
+                }}>{v.label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{
+          width: 1, height: 32, background: C.line,
+        }} />
+        <button style={{
+          minHeight: 44, padding: '0 16px', border: `1px solid ${C.line}`,
+          borderRadius: 6, background: C.surface, color: C.inkSub,
+          fontSize: fs.base - 2, cursor: 'pointer',
+        }}>ヘルプ</button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 共通カード
+// ============================================================
+function Card({ title, children, fs, action }) {
+  return (
+    <div style={{
+      background: C.surface, border: `1px solid ${C.line}`,
+      borderRadius: 8, overflow: 'hidden',
+    }}>
+      {title && (
+        <div style={{
+          padding: '16px 20px', borderBottom: `1px solid ${C.lineLight}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <h2 style={{ fontSize: fs.h3, fontWeight: 700, color: C.ink, margin: 0 }}>{title}</h2>
+          {action}
+        </div>
+      )}
+      <div style={{ padding: 20 }}>{children}</div>
+    </div>
+  );
+}
+
+function PrimaryButton({ children, onClick, fs, danger, full }) {
+  return (
+    <button onClick={onClick} style={{
+      minHeight: 48, padding: '0 24px', width: full ? '100%' : 'auto',
+      background: danger ? C.danger : C.navy, color: '#FFFFFF',
+      border: 'none', borderRadius: 6, cursor: 'pointer',
+      fontSize: fs.base, fontWeight: 700, letterSpacing: '0.02em',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>{children}</button>
+  );
+}
+
+function GhostButton({ children, onClick, fs }) {
+  return (
+    <button onClick={onClick} style={{
+      minHeight: 48, padding: '0 20px',
+      background: C.surface, color: C.inkSub,
+      border: `1px solid ${C.line}`, borderRadius: 6, cursor: 'pointer',
+      fontSize: fs.base, fontWeight: 500,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>{children}</button>
+  );
+}
+
+// ============================================================
+// ページ: ダッシュボード
+// ============================================================
+function DashboardPage({ fs, onNav }) {
+  const stats = [
+    ['本日の見積依頼', '4', '件', C.info, Icon.inquiry],
+    ['未対応の依頼',   '7', '件', C.warning, Icon.warn],
+    ['公開中の商品',   '209', '点', C.success, Icon.box],
+    ['下書きの商品',   '85', '点', C.neutral, Icon.box],
+  ];
+  const recentInquiries = [
+    ['ST-20260520-0042', '株式会社サウンドミュージック', '3商品', '未対応', 'warning'],
+    ['ST-20260520-0041', '田中楽器店',                   '1商品', '対応中', 'info'],
+    ['ST-20260519-0040', '市立第一中学校',               '8商品', '完了',   'success'],
+    ['ST-20260519-0039', 'スタジオ・ノア',               '2商品', '完了',   'success'],
+  ];
+  return (
+    <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 統計カード */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+        {stats.map(([label, num, unit, color, icon]) => (
+          <div key={label} style={{
+            background: C.surface, border: `1px solid ${C.line}`,
+            borderRadius: 8, padding: 20,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+              <span style={{ fontSize: fs.base - 2, color: C.inkSub }}>{label}</span>
+              <div style={{
+                width: 36, height: 36, borderRadius: 8,
+                background: color + '18', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+              }}>{icon(20, color)}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={{ fontSize: fs.h1 + 4, fontWeight: 700, color: C.ink }}>{num}</span>
+              <span style={{ fontSize: fs.base - 2, color: C.inkSub }}>{unit}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 最近の見積依頼 */}
+      <Card title="最近の見積依頼" fs={fs}
+        action={<button onClick={() => onNav('inquiries')} style={{
+          background: 'none', border: 'none', color: C.info, cursor: 'pointer',
+          fontSize: fs.base - 2, fontWeight: 500, textDecoration: 'underline',
+        }}>すべて見る</button>}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${C.line}` }}>
+              {['受付番号', '会社名', '商品数', 'ステータス'].map(h => (
+                <th key={h} style={{
+                  textAlign: 'left', padding: '10px 8px',
+                  fontSize: fs.base - 2, fontWeight: 700, color: C.inkSub,
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {recentInquiries.map(([num, company, count, status, type]) => (
+              <tr key={num} style={{ borderBottom: `1px solid ${C.lineLight}` }}>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.ink, fontWeight: 500 }}>{num}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.ink }}>{company}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{count}</td>
+                <td style={{ padding: '14px 8px' }}>
+                  <StatusBadge type={type} label={status} fs={fs} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      {/* クイックアクション */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+        {[
+          ['CSVを取り込む', 'Shopify互換CSVから商品を一括登録', 'import', Icon.upload],
+          ['商品マスタを見る', '登録済み商品の確認・編集', 'products', Icon.box],
+          ['反映を承認する', '取り込んだ商品を本番に反映', 'approve', Icon.check],
+        ].map(([title, desc, target, icon]) => (
+          <button key={title} onClick={() => onNav(target)} style={{
+            background: C.surface, border: `1px solid ${C.line}`,
+            borderRadius: 8, padding: 20, cursor: 'pointer', textAlign: 'left',
+            display: 'flex', gap: 14, alignItems: 'flex-start',
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 8, background: C.navy + '12',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>{icon(24, C.navy)}</div>
+            <div>
+              <div style={{ fontSize: fs.base, fontWeight: 700, color: C.ink, marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: fs.base - 3, color: C.inkSub, lineHeight: 1.6 }}>{desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ページ: 商品マスタ
+// ============================================================
+function ProductsPage({ fs }) {
+  const products = [
+    ['YAMAHA YCL-255',   'クラリネット', 'yamaha-ycl-255',  105000, 'success', '公開中'],
+    ['YAMAHA YAS-280',   'サクソフォン', 'yamaha-yas-280',  160000, 'success', '公開中'],
+    ['YAMAHA YTR-8335',  'トランペット', 'yamaha-ytr-8335', 430000, 'success', '公開中'],
+    ['YAMAHA YFL-917C',  'フルート',     'yamaha-yfl-917c', 5081818,'warning', '下書き'],
+    ['YAMAHA YHR-869D',  'ホルン',       'yamaha-yhr-869d', 1150000,'warning', '下書き'],
+    ['YAMAHA YOB-831',   'ダブルリード', 'yamaha-yob-831',  1080000,'success', '公開中'],
+    ['YAMAHA YSL-882II', 'トロンボーン', 'yamaha-ysl-882ii',540000, 'danger',  '非公開'],
+  ];
+  return (
+    <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* フィルタバー */}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <input placeholder="商品名・品番で検索"
+          style={{
+            flex: 1, maxWidth: 320, minHeight: 48, padding: '0 16px',
+            border: `1px solid ${C.line}`, borderRadius: 6,
+            fontSize: fs.base, color: C.ink,
+          }} />
+        <select style={{
+          minHeight: 48, padding: '0 14px', border: `1px solid ${C.line}`,
+          borderRadius: 6, fontSize: fs.base, color: C.ink, background: C.surface,
+        }}>
+          <option>すべてのカテゴリ</option>
+          <option>クラリネット</option>
+          <option>サクソフォン</option>
+        </select>
+        <select style={{
+          minHeight: 48, padding: '0 14px', border: `1px solid ${C.line}`,
+          borderRadius: 6, fontSize: fs.base, color: C.ink, background: C.surface,
+        }}>
+          <option>すべての状態</option>
+          <option>公開中</option>
+          <option>下書き</option>
+          <option>非公開</option>
+        </select>
+        <div style={{ flex: 1 }} />
+        <PrimaryButton fs={fs}>＋ 商品を追加</PrimaryButton>
+      </div>
+
+      <Card fs={fs}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${C.line}` }}>
+              {['商品名', 'カテゴリ', '品番（Handle）', '価格（税抜・社内用）', '状態', ''].map(h => (
+                <th key={h} style={{
+                  textAlign: h.includes('価格') ? 'right' : 'left', padding: '10px 8px',
+                  fontSize: fs.base - 2, fontWeight: 700, color: C.inkSub,
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {products.map(([name, cat, handle, price, type, status]) => (
+              <tr key={handle} style={{ borderBottom: `1px solid ${C.lineLight}` }}>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.ink, fontWeight: 500 }}>{name}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{cat}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 2, color: C.inkMute, fontFamily: 'monospace' }}>{handle}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.ink, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{yen(price)}</td>
+                <td style={{ padding: '14px 8px' }}>
+                  <StatusBadge type={type} label={status} fs={fs} />
+                </td>
+                <td style={{ padding: '14px 8px', textAlign: 'right' }}>
+                  <button style={{
+                    minHeight: 40, padding: '0 14px', border: `1px solid ${C.line}`,
+                    borderRadius: 5, background: C.surface, color: C.info,
+                    fontSize: fs.base - 2, fontWeight: 500, cursor: 'pointer',
+                  }}>編集</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{
+          marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.lineLight}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <span style={{ fontSize: fs.base - 2, color: C.inkSub }}>全 294 件中 1〜7 件を表示</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['前へ', '1', '2', '3', '次へ'].map((t, i) => (
+              <button key={i} style={{
+                minWidth: 44, minHeight: 44, border: `1px solid ${C.line}`,
+                borderRadius: 5, cursor: 'pointer', fontSize: fs.base - 2,
+                background: t === '1' ? C.navy : C.surface,
+                color: t === '1' ? '#FFFFFF' : C.inkSub,
+                fontWeight: t === '1' ? 700 : 400,
+              }}>{t}</button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* 価格非表示の注記 */}
+      <div style={{
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+        background: C.infoBg, border: `1px solid ${C.info}40`,
+        borderRadius: 6, padding: '14px 16px',
+      }}>
+        {Icon.info(fs.base, C.info)}
+        <span style={{ fontSize: fs.base - 2, color: C.inkSub, lineHeight: 1.7 }}>
+          価格は管理画面でのみ表示されます。公開サイトでは全商品の価格を非表示にし、見積依頼へ誘導する運用です。
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ページ: CSV取込
+// ============================================================
+function ImportPage({ fs }) {
+  const [step, setStep] = useState(2); // 0:アップロード前 〜 完了
+  const steps = ['アップロード', 'バリデーション', 'エラー修正', 'プレビュー', '反映承認'];
+
+  return (
+    <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* ステップインジケータ */}
+      <div style={{
+        background: C.surface, border: `1px solid ${C.line}`,
+        borderRadius: 8, padding: '20px 24px',
+        display: 'flex', alignItems: 'center',
+      }}>
+        {steps.map((label, i) => (
+          <React.Fragment key={label}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: i < step ? C.success : i === step ? C.navy : C.neutralBg,
+                color: i <= step ? '#FFFFFF' : C.inkMute,
+                fontSize: fs.base - 3, fontWeight: 700,
+              }}>{i < step ? Icon.ok(16, '#FFFFFF') : i + 1}</div>
+              <span style={{
+                fontSize: fs.base - 2,
+                color: i === step ? C.ink : C.inkSub,
+                fontWeight: i === step ? 700 : 400,
+              }}>{label}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{
+                flex: 1, height: 2, margin: '0 12px',
+                background: i < step ? C.success : C.line,
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* バリデーション結果 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        {[
+          ['エラー', '3', C.danger, C.dangerBg, Icon.error, '反映できません'],
+          ['警告', '12', C.warning, C.warningBg, Icon.warn, '確認が必要です'],
+          ['正常', '279', C.success, C.successBg, Icon.ok, '問題ありません'],
+        ].map(([label, num, color, bg, icon, note]) => (
+          <div key={label} style={{
+            background: bg, border: `1px solid ${color}50`,
+            borderRadius: 8, padding: 20,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              {icon(fs.base + 4, color)}
+              <span style={{ fontSize: fs.base, fontWeight: 700, color: color }}>{label}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: fs.h1, fontWeight: 700, color: C.ink }}>{num}</span>
+              <span style={{ fontSize: fs.base - 2, color: C.inkSub }}>件 — {note}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* エラー一覧 */}
+      <Card title="修正が必要な項目" fs={fs}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            ['error', '12行目', 'YAMAHA YCL-XXX', 'Variant SKU が空欄です', '必須項目を入力してください'],
+            ['error', '45行目', 'YAMAHA YTR-YYY', 'Handle が重複しています', '一意の値に修正してください'],
+            ['error', '88行目', 'YAMAHA YFL-ZZZ', '価格が0なのに公開状態です', '価格入力か下書きへ変更'],
+            ['warning', '23行目', 'YAMAHA YAS-AAA', 'SEOタイトルが60文字超過', '短縮を推奨します'],
+            ['warning', '67行目', 'YAMAHA YOB-BBB', 'カテゴリが未定義です', '既定カテゴリから選択してください'],
+          ].map(([type, line, name, msg, hint], i) => {
+            const isErr = type === 'error';
+            const color = isErr ? C.danger : C.warning;
+            const bg = isErr ? C.dangerBg : C.warningBg;
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                border: `1px solid ${color}40`, borderLeft: `4px solid ${color}`,
+                borderRadius: 6, padding: '14px 16px', background: bg + '60',
+              }}>
+                <div style={{ flexShrink: 0 }}>
+                  {isErr ? Icon.error(fs.base + 4, color) : Icon.warn(fs.base + 4, color)}
+                </div>
+                <div style={{ flexShrink: 0, width: 64 }}>
+                  <span style={{ fontSize: fs.base - 2, fontWeight: 700, color: C.ink }}>{line}</span>
+                </div>
+                <div style={{ flexShrink: 0, width: 150 }}>
+                  <span style={{ fontSize: fs.base - 2, color: C.inkSub, fontFamily: 'monospace' }}>{name}</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: fs.base - 1, color: C.ink, fontWeight: 500 }}>{msg}</div>
+                  <div style={{ fontSize: fs.base - 3, color: C.inkSub, marginTop: 2 }}>{hint}</div>
+                </div>
+                <button style={{
+                  flexShrink: 0, minHeight: 44, padding: '0 16px',
+                  background: C.surface, border: `1px solid ${color}`,
+                  borderRadius: 5, color: color, fontSize: fs.base - 2,
+                  fontWeight: 700, cursor: 'pointer',
+                }}>修正する</button>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: fs.base - 2, color: C.danger, fontWeight: 500,
+        }}>
+          {Icon.error(fs.base, C.danger)}
+          エラーが3件あります。すべて解消すると次へ進めます。
+        </span>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <GhostButton fs={fs}>下書きを破棄</GhostButton>
+          <button disabled style={{
+            minHeight: 48, padding: '0 24px', background: C.neutralBg,
+            color: C.inkMute, border: 'none', borderRadius: 6,
+            fontSize: fs.base, fontWeight: 700, cursor: 'not-allowed',
+          }}>プレビューへ進む</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ページ: 差分プレビュー
+// ============================================================
+function PreviewPage({ fs }) {
+  const diffs = [
+    ['new',     'YAMAHA YCL-650',   'クラリネット', '新規追加'],
+    ['new',     'YAMAHA YTR-3335',  'トランペット', '新規追加'],
+    ['update',  'YAMAHA YAS-280',   'サクソフォン', '価格・説明を変更'],
+    ['update',  'YAMAHA YFL-212',   'フルート',     '在庫状態を変更'],
+    ['remove',  'YAMAHA YOB-OLD',   'ダブルリード', '取扱終了'],
+  ];
+  const diffMap = {
+    new:    { c: C.success, bg: C.successBg, label: '新規', icon: Icon.ok },
+    update: { c: C.info,    bg: C.infoBg,    label: '変更', icon: Icon.info },
+    remove: { c: C.danger,  bg: C.dangerBg,  label: '削除', icon: Icon.error },
+  };
+  return (
+    <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 差分サマリー */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        {[
+          ['新規追加', '2', C.success, C.successBg, Icon.ok],
+          ['内容変更', '2', C.info, C.infoBg, Icon.info],
+          ['削除', '1', C.danger, C.dangerBg, Icon.error],
+        ].map(([label, num, color, bg, icon]) => (
+          <div key={label} style={{
+            background: bg, border: `1px solid ${color}50`,
+            borderRadius: 8, padding: 18, display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            {icon(fs.base + 8, color)}
+            <div>
+              <div style={{ fontSize: fs.base - 2, color: C.inkSub }}>{label}</div>
+              <div style={{ fontSize: fs.h2, fontWeight: 700, color: C.ink }}>{num} 件</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Card title="本番への反映内容（ステージング → 本番）" fs={fs}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${C.line}` }}>
+              {['区分', '商品名', 'カテゴリ', '変更内容', ''].map(h => (
+                <th key={h} style={{
+                  textAlign: 'left', padding: '10px 8px',
+                  fontSize: fs.base - 2, fontWeight: 700, color: C.inkSub,
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {diffs.map(([type, name, cat, change], i) => {
+              const d = diffMap[type];
+              return (
+                <tr key={i} style={{ borderBottom: `1px solid ${C.lineLight}` }}>
+                  <td style={{ padding: '14px 8px' }}>
+                    <StatusBadge type={type==='new'?'success':type==='update'?'info':'danger'} label={d.label} fs={fs} />
+                  </td>
+                  <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.ink, fontWeight: 500 }}>{name}</td>
+                  <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{cat}</td>
+                  <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{change}</td>
+                  <td style={{ padding: '14px 8px', textAlign: 'right' }}>
+                    <button style={{
+                      minHeight: 40, padding: '0 14px', border: `1px solid ${C.line}`,
+                      borderRadius: 5, background: C.surface, color: C.info,
+                      fontSize: fs.base - 2, fontWeight: 500, cursor: 'pointer',
+                    }}>詳細を見る</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+
+      {/* 簡易プレビュー */}
+      <Card title="公開サイトでの表示プレビュー" fs={fs}>
+        <div style={{
+          display: 'flex', gap: 10, alignItems: 'flex-start',
+          background: C.infoBg, border: `1px solid ${C.info}40`,
+          borderRadius: 6, padding: '12px 14px', marginBottom: 16,
+        }}>
+          {Icon.info(fs.base, C.info)}
+          <span style={{ fontSize: fs.base - 2, color: C.inkSub, lineHeight: 1.7 }}>
+            実際に公開サイトに表示される商品カードのプレビューです。価格は公開サイトでは非表示になります。
+          </span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {['YAMAHA YCL-650', 'YAMAHA YTR-3335', 'YAMAHA YAS-280'].map(name => (
+            <div key={name} style={{
+              border: `1px solid ${C.line}`, borderRadius: 6, overflow: 'hidden',
+            }}>
+              <div style={{
+                aspectRatio: '4/3', background: C.surfaceAlt,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: C.inkMute, fontSize: fs.base - 3,
+              }}>商品画像</div>
+              <div style={{ padding: 14 }}>
+                <div style={{ fontSize: fs.base - 1, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{name}</div>
+                <div style={{
+                  fontSize: fs.base - 3, color: C.warning, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                  {Icon.inquiry(fs.base - 3, C.warning)}
+                  お見積もり対応
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+        <GhostButton fs={fs}>取込をやり直す</GhostButton>
+        <PrimaryButton fs={fs}>反映承認へ進む →</PrimaryButton>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ページ: 反映承認
+// ============================================================
+function ApprovePage({ fs }) {
+  const [confirmed, setConfirmed] = useState(false);
+  const [done, setDone] = useState(false);
+
+  if (done) {
+    return (
+      <div style={{ padding: 32 }}>
+        <div style={{
+          background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8,
+          padding: '64px 32px', textAlign: 'center',
+        }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: '50%', background: C.successBg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 24px',
+          }}>{Icon.ok(40, C.success)}</div>
+          <h2 style={{ fontSize: fs.h2, fontWeight: 700, color: C.ink, margin: '0 0 12px' }}>
+            本番への反映が完了しました
+          </h2>
+          <p style={{ fontSize: fs.base, color: C.inkSub, lineHeight: 1.8, margin: '0 0 8px' }}>
+            5件の変更（新規2 / 変更2 / 削除1）が公開サイトに反映されました。
+          </p>
+          <p style={{ fontSize: fs.base - 2, color: C.inkMute, margin: 0 }}>
+            反映前のデータはスナップショットとして保存されています。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 反映内容の最終確認 */}
+      <Card title="反映内容の最終確認" fs={fs}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 20 }}>
+          {[
+            ['取込ファイル', 'shopify_yamaha_20260520.csv'],
+            ['実行者', '鈴木 淳司（管理者）'],
+            ['対象件数', '5件（新規2 / 変更2 / 削除1）'],
+            ['実行日時', '2026年5月20日 14:32'],
+          ].map(([k, v]) => (
+            <div key={k} style={{
+              display: 'flex', flexDirection: 'column', gap: 4,
+              padding: '12px 16px', background: C.surfaceAlt, borderRadius: 6,
+            }}>
+              <span style={{ fontSize: fs.base - 3, color: C.inkSub }}>{k}</span>
+              <span style={{ fontSize: fs.base - 1, color: C.ink, fontWeight: 500 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* 警告ボックス */}
+        <div style={{
+          display: 'flex', gap: 12, alignItems: 'flex-start',
+          background: C.warningBg, border: `1px solid ${C.warning}`,
+          borderRadius: 6, padding: '16px 18px',
+        }}>
+          {Icon.warn(fs.base + 6, C.warning)}
+          <div>
+            <div style={{ fontSize: fs.base - 1, fontWeight: 700, color: C.ink, marginBottom: 4 }}>
+              この操作は公開サイトに即座に反映されます
+            </div>
+            <div style={{ fontSize: fs.base - 2, color: C.inkSub, lineHeight: 1.7 }}>
+              反映前の状態は自動でスナップショット保存されるため、問題があれば元に戻せます。
+              内容をよく確認してから実行してください。
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* 確認チェック + 実行 */}
+      <Card fs={fs}>
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+          padding: '8px 0', marginBottom: 16,
+        }}>
+          <input type="checkbox" checked={confirmed}
+            onChange={e => setConfirmed(e.target.checked)}
+            style={{ width: 22, height: 22, cursor: 'pointer', accentColor: C.navy }} />
+          <span style={{ fontSize: fs.base, color: C.ink }}>
+            上記の内容を確認しました。本番サイトへ反映します。
+          </span>
+        </label>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+          <GhostButton fs={fs}>キャンセル</GhostButton>
+          <button onClick={() => confirmed && setDone(true)}
+            disabled={!confirmed}
+            style={{
+              minHeight: 48, padding: '0 28px',
+              background: confirmed ? C.success : C.neutralBg,
+              color: confirmed ? '#FFFFFF' : C.inkMute,
+              border: 'none', borderRadius: 6,
+              fontSize: fs.base, fontWeight: 700,
+              cursor: confirmed ? 'pointer' : 'not-allowed',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+            }}>
+            {Icon.check(fs.base + 2, confirmed ? '#FFFFFF' : C.inkMute)}
+            本番に反映する
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// ページ: 見積依頼
+// ============================================================
+function InquiriesPage({ fs }) {
+  const inquiries = [
+    ['ST-20260520-0042', '株式会社サウンドミュージック', '山田 太郎', '3商品', '5/20', 'warning', '未対応'],
+    ['ST-20260520-0041', '田中楽器店', '田中 一郎', '1商品', '5/20', 'info', '対応中'],
+    ['ST-20260519-0040', '市立第一中学校', '佐藤 花子', '8商品', '5/19', 'success', '完了'],
+    ['ST-20260519-0039', 'スタジオ・ノア', '鈴木 次郎', '2商品', '5/19', 'success', '完了'],
+    ['ST-20260518-0038', '音楽教室ハーモニー', '高橋 三郎', '5商品', '5/18', 'success', '完了'],
+  ];
+  return (
+    <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', gap: 12 }}>
+        {[['すべて', 5, true], ['未対応', 1, false], ['対応中', 1, false], ['完了', 3, false]].map(([label, count, active]) => (
+          <button key={label} style={{
+            minHeight: 44, padding: '0 18px', borderRadius: 6, cursor: 'pointer',
+            border: `1px solid ${active ? C.navy : C.line}`,
+            background: active ? C.navy : C.surface,
+            color: active ? '#FFFFFF' : C.inkSub,
+            fontSize: fs.base - 1, fontWeight: active ? 700 : 400,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            {label}
+            <span style={{
+              background: active ? 'rgba(255,255,255,0.25)' : C.neutralBg,
+              color: active ? '#FFFFFF' : C.inkSub,
+              borderRadius: 10, padding: '1px 8px', fontSize: fs.base - 4,
+            }}>{count}</span>
+          </button>
+        ))}
+      </div>
+
+      <Card fs={fs}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${C.line}` }}>
+              {['受付番号', '会社名', '担当者', '商品数', '受付日', 'ステータス', ''].map(h => (
+                <th key={h} style={{
+                  textAlign: 'left', padding: '10px 8px',
+                  fontSize: fs.base - 2, fontWeight: 700, color: C.inkSub,
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {inquiries.map(([num, company, person, count, date, type, status]) => (
+              <tr key={num} style={{ borderBottom: `1px solid ${C.lineLight}` }}>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 2, color: C.ink, fontWeight: 500 }}>{num}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.ink }}>{company}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{person}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{count}</td>
+                <td style={{ padding: '14px 8px', fontSize: fs.base - 1, color: C.inkSub }}>{date}</td>
+                <td style={{ padding: '14px 8px' }}>
+                  <StatusBadge type={type} label={status} fs={fs} />
+                </td>
+                <td style={{ padding: '14px 8px', textAlign: 'right' }}>
+                  <button style={{
+                    minHeight: 40, padding: '0 16px', border: 'none',
+                    borderRadius: 5, background: C.navy, color: '#FFFFFF',
+                    fontSize: fs.base - 2, fontWeight: 700, cursor: 'pointer',
+                  }}>見積回答</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// ルートApp
+// ============================================================
+function App() {
+  const [page, setPage] = useState('dashboard');
+  const [sizeKey, setSizeKey] = useState('md');
+  const fs = FONT_SCALE[sizeKey];
+
+  const titles = {
+    dashboard: 'ダッシュボード',
+    products:  '商品マスタ管理',
+    import:    'CSV一括取込',
+    preview:   '差分プレビュー',
+    approve:   '反映承認',
+    inquiries: '見積依頼管理',
+  };
+
+  return (
+    <div style={{
+      fontFamily: "'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif",
+      background: C.bg, minHeight: '100vh', display: 'flex',
+      color: C.ink,
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        * { box-sizing: border-box; }
+        button, input, select { font-family: inherit; }
+        input:focus, select:focus { outline: 2px solid ${C.info}; outline-offset: -1px; }
+        button:focus-visible { outline: 2px solid ${C.info}; outline-offset: 2px; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb { background: ${C.line}; border-radius: 5px; }
+      `}</style>
+
+      <Sidebar page={page} onNav={setPage} fs={fs} />
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <TopBar title={titles[page]} sizeKey={sizeKey} onSize={setSizeKey} fs={fs} />
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {page === 'dashboard' && <DashboardPage fs={fs} onNav={setPage} />}
+          {page === 'products'  && <ProductsPage fs={fs} />}
+          {page === 'import'    && <ImportPage fs={fs} />}
+          {page === 'preview'   && <PreviewPage fs={fs} />}
+          {page === 'approve'   && <ApprovePage fs={fs} />}
+          {page === 'inquiries' && <InquiriesPage fs={fs} />}
+        </div>
+      </div>
+
+      <div style={{
+        position: 'fixed', bottom: 12, right: 12, background: C.navy, color: '#FFFFFF',
+        fontSize: 10, padding: '7px 13px', letterSpacing: '0.04em', borderRadius: 3, opacity: 0.85,
+      }}>
+        DESIGN COMP — 管理画面 / UD対応
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(App, null)
+);
+</script>
+</body>
+</html>

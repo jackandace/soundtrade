@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --env-file=.env.local -e ' *)",
+      "Bash(npx tsc *)",
+      "Bash(ZIP=\"/Users/suzukiatsushi/Downloads/Yamaha_shopifyデータ抽出Skills.zip\" *)",
+      "Bash(npm install *)"
+    ]
+  }
+}
