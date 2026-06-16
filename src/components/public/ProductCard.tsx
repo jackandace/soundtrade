@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ImagePlaceholder } from "./ImagePlaceholder";
 import { QuoteLabel } from "./QuoteLabel";
+import { formatListPrice } from "@/lib/price";
 
 type Props = {
   productName: string;
@@ -9,6 +10,7 @@ type Props = {
   categoryL1: string | null;
   categoryL3: string | null;
   imageUrl?: string | null;
+  msrpInclTax?: number | null;
 };
 
 export function ProductCard({
@@ -17,7 +19,9 @@ export function ProductCard({
   categoryL1,
   categoryL3,
   imageUrl,
+  msrpInclTax,
 }: Props) {
+  const listPrice = formatListPrice(msrpInclTax);
   return (
     <Link
       href={`/products/${handle}`}
@@ -48,6 +52,12 @@ export function ProductCard({
       </div>
       {categoryL3 && (
         <div className="mb-2.5 text-xs text-sumi-light">{categoryL3}</div>
+      )}
+      {listPrice && (
+        <div className="mb-1.5 text-[13px] text-sumi">
+          <span className="text-[10px] text-muted">定価 </span>
+          {listPrice}
+        </div>
       )}
       <div className="flex items-center justify-between">
         <QuoteLabel size="sm" />

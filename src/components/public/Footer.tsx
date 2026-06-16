@@ -1,12 +1,36 @@
+import Link from "next/link";
 import { Container } from "./Container";
 
-const SECTIONS: Array<[string, string[]]> = [
-  ["取扱カテゴリ", ["クラリネット", "サクソフォン", "トランペット", "フルート"]],
-  ["サービス", ["カタログを見る", "見積依頼の流れ", "取扱メーカー"]],
-  [
-    "会社情報",
-    ["運営会社", "特定商取引法", "プライバシーポリシー", "お問い合わせ"],
-  ],
+type FooterItem = { label: string; href?: string };
+
+const SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
+  {
+    title: "取扱カテゴリ",
+    items: [
+      { label: "クラリネット", href: "/catalog?category=clarinet" },
+      { label: "サクソフォン", href: "/catalog?category=saxophone" },
+      { label: "トランペット", href: "/catalog?category=trumpet" },
+      { label: "フルート", href: "/catalog?category=flute" },
+    ],
+  },
+  {
+    title: "サービス",
+    items: [
+      { label: "カタログを見る", href: "/catalog" },
+      { label: "ご利用の流れ", href: "/#flow" },
+      { label: "取扱メーカー", href: "/#makers" },
+      { label: "掲載外商品のお問い合わせ", href: "/contact" },
+    ],
+  },
+  {
+    title: "会社情報",
+    items: [
+      { label: "運営会社" },
+      { label: "特定商取引法" },
+      { label: "プライバシーポリシー" },
+      { label: "お問い合わせ", href: "/contact" },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -23,19 +47,29 @@ export function Footer() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6 md:flex md:gap-12">
-            {SECTIONS.map(([title, items]) => (
-              <div key={title}>
+            {SECTIONS.map((section) => (
+              <div key={section.title}>
                 <div className="mb-3.5 text-xs font-medium tracking-[0.08em] text-sumi">
-                  {title}
+                  {section.title}
                 </div>
-                {items.map((it) => (
-                  <div
-                    key={it}
-                    className="mb-2 text-[13px] text-sumi-light"
-                  >
-                    {it}
-                  </div>
-                ))}
+                {section.items.map((it) =>
+                  it.href ? (
+                    <Link
+                      key={it.label}
+                      href={it.href}
+                      className="mb-2 block text-[13px] text-sumi-light transition-colors hover:text-sumi"
+                    >
+                      {it.label}
+                    </Link>
+                  ) : (
+                    <div
+                      key={it.label}
+                      className="mb-2 text-[13px] text-sumi-light"
+                    >
+                      {it.label}
+                    </div>
+                  ),
+                )}
               </div>
             ))}
           </div>

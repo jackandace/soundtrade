@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixed: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
     { url: `${base}/catalog`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${base}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ];
 
   const categoryEntries: MetadataRoute.Sitemap = CATEGORIES.map((c) => ({

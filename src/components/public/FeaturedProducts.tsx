@@ -9,7 +9,7 @@ export async function FeaturedProducts() {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "product_name, handle, category_l2, category_l3, product_images(url, is_primary, sort_order)",
+      "product_name, handle, category_l2, category_l3, msrp_incl_tax, product_images(url, is_primary, sort_order)",
     )
     .eq("status", "active")
     .order("created_at", { ascending: false })
@@ -48,6 +48,7 @@ export async function FeaturedProducts() {
                 categoryL1={p.category_l2}
                 categoryL3={p.category_l3}
                 imageUrl={pickPrimaryImage(p.product_images)}
+                msrpInclTax={p.msrp_incl_tax}
               />
             ))}
           </div>

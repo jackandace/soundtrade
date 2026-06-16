@@ -8,6 +8,7 @@ import { ImagePlaceholder } from "@/components/public/ImagePlaceholder";
 import { AddToCartForm } from "@/components/public/AddToCartForm";
 import { ProductJsonLd } from "@/components/json-ld/Product";
 import { SITE_DEFAULT_DESCRIPTION } from "@/lib/seo";
+import { formatListPrice } from "@/lib/price";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function ProductDetailPage({
   const { data: product, error } = await supabase
     .from("products")
     .select(
-      "id, product_name, handle, sku_base, maker, category_l1, category_l2, category_l3, description_short, description_long",
+      "id, product_name, handle, sku_base, maker, category_l1, category_l2, category_l3, description_short, description_long, msrp_incl_tax",
     )
     .eq("handle", params.handle)
     .eq("status", "active")
@@ -82,6 +83,7 @@ export default async function ProductDetailPage({
   const images = imageRows ?? [];
   const mainImage = images[0]?.url ?? null;
   const thumbs = images.slice(0, 4);
+  const listPrice = formatListPrice(product.msrp_incl_tax);
 
   return (
     <div className="min-h-[70vh] bg-ivory">
@@ -167,6 +169,20 @@ export default async function ProductDetailPage({
             {product.category_l3 && (
               <div className="mb-6 text-sm text-sumi-light">
                 {product.category_l3}
+              </div>
+            )}
+
+            {listPrice && (
+              <div className="mb-6 border-y border-line py-4">
+                <div className="text-[11px] tracking-wider text-muted">
+                  メーカー希望小売価格（定価）
+                </div>
+                <div className="mt-1 text-2xl font-light text-sumi">
+                  {listPrice}
+                </div>
+                <div className="mt-1.5 text-xs text-sumi-light">
+                  卸価格はお取引内容・数量に応じて見積依頼で個別にご案内します。
+                </div>
               </div>
             )}
 

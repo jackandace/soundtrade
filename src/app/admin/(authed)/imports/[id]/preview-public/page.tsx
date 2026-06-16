@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/admin/TopBar";
 import { ImagePlaceholder } from "@/components/public/ImagePlaceholder";
 import { QuoteLabel } from "@/components/public/QuoteLabel";
+import { formatListPrice } from "@/lib/price";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,9 @@ export default async function PreviewPublicPage({
   // active になる商品だけ表示（公開サイトに出る予定のもの）
   const { data: rows } = await supabase
     .from("products_staging")
-    .select("id, handle, product_name, category_l1, category_l3, status")
+    .select(
+      "id, handle, product_name, category_l1, category_l2, category_l3, msrp_incl_tax, status",
+    )
     .eq("import_job_id", params.id)
     .order("handle")
     .limit(300);
@@ -77,8 +80,9 @@ export default async function PreviewPublicPage({
                     key={p.id}
                     productName={p.product_name ?? "(無名)"}
                     handle={p.handle}
-                    categoryL1={p.category_l1}
+                    categoryL1={p.category_l2}
                     categoryL3={p.category_l3}
+                    msrpInclTax={p.msrp_incl_tax}
                   />
                 ))}
               </div>
@@ -100,12 +104,15 @@ function PreviewCard({
   handle,
   categoryL1,
   categoryL3,
+  msrpInclTax,
 }: {
   productName: string;
   handle: string;
   categoryL1: string | null;
   categoryL3: string | null;
+  msrpInclTax: number | null;
 }) {
+  const listPrice = formatListPrice(msrpInclTax);
   return (
     <div className="block">
       <div className="mb-3.5">
@@ -121,6 +128,12 @@ function PreviewCard({
       </div>
       {categoryL3 && (
         <div className="mb-2.5 text-xs text-sumi-light">{categoryL3}</div>
+      )}
+      {listPrice && (
+        <div className="mb-1.5 text-[13px] text-sumi">
+          <span className="text-[10px] text-muted">定価 </span>
+          {listPrice}
+        </div>
       )}
       <div className="flex items-center justify-between">
         <QuoteLabel size="sm" />
