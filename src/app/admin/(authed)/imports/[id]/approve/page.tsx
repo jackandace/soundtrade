@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/admin/TopBar";
 import { Card } from "@/components/admin/Card";
+import { ImportSteps } from "@/components/admin/ImportSteps";
 import { computeDiff } from "@/lib/csv/diff";
 import { ApproveButton } from "./ApproveButton";
 
@@ -35,6 +36,7 @@ export default async function ApprovePage({
     <>
       <TopBar title="承認 → 反映" />
       <div className="flex flex-col gap-5 p-8">
+        <ImportSteps current={3} />
         <Link
           href={`/admin/imports/${params.id}`}
           className="text-admin-xs text-admin-inkMute underline-offset-2 hover:underline"

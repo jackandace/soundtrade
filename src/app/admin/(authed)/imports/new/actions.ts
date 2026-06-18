@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { parseShopifyCsv, parseSplitCsv } from "@/lib/csv/parse";
+import { parseImportFiles } from "@/lib/csv/import-parse";
 import { validateRows } from "@/lib/csv/validate";
 import type { ParsedImport } from "@/lib/csv/types";
 
@@ -16,44 +16,39 @@ export async function submitImport(
   formData: FormData,
 ): Promise<SubmitImportResult> {
   const admin = await requireAdmin();
-  const pattern = String(formData.get("pattern") ?? "");
+
+  // 形式は問わず、アップロードされた全ファイル（csv / xlsx）を受け付けて自動判定
+  const files = formData
+    .getAll("files")
+    .filter((v): v is File => v instanceof File && v.size > 0);
+
+  if (files.length === 0) {
+    return { ok: false, error: "ファイルが選択されていません" };
+  }
+  for (const f of files) {
+    if (f.size > MAX_FILE_BYTES) {
+      return { ok: false, error: `${f.name}: ファイルサイズが 10MB を超えています` };
+    }
+    const lower = f.name.toLowerCase();
+    if (!lower.endsWith(".csv") && !lower.endsWith(".xlsx")) {
+      return {
+        ok: false,
+        error: `${f.name}: Excel(.xlsx) か CSV(.csv) のファイルをアップロードしてください`,
+      };
+    }
+  }
+
+  const sourceName = files.map((f) => f.name).join(" + ");
+  const sourceSize = files.reduce((s, f) => s + f.size, 0);
 
   let parsed: ParsedImport;
-  let sourceName = "";
-  let sourceSize = 0;
-
   try {
-    if (pattern === "shopify") {
-      const file = formData.get("shopify");
-      if (!(file instanceof File) || file.size === 0) {
-        return { ok: false, error: "ファイルが選択されていません" };
-      }
-      if (file.size > MAX_FILE_BYTES) {
-        return { ok: false, error: "ファイルサイズが 10MB を超えています" };
-      }
-      sourceName = file.name;
-      sourceSize = file.size;
-      parsed = parseShopifyCsv(await file.text());
-    } else {
-      const inputs = ["products", "variants", "specs"]
-        .map((k) => formData.get(k))
-        .filter((v): v is File => v instanceof File && v.size > 0);
-      if (inputs.length === 0) {
-        return { ok: false, error: "ファイルを 1 つ以上選択してください" };
-      }
-      const files: { name: string; text: string }[] = [];
-      for (const f of inputs) {
-        if (f.size > MAX_FILE_BYTES) {
-          return { ok: false, error: `${f.name}: 10MB を超えています` };
-        }
-        sourceSize += f.size;
-        files.push({ name: f.name, text: await f.text() });
-      }
-      sourceName = files.map((f) => f.name).join(" + ");
-      parsed = parseSplitCsv(files);
-    }
+    parsed = await parseImportFiles(files);
   } catch (e) {
-    return { ok: false, error: `パース失敗: ${(e as Error).message}` };
+    return {
+      ok: false,
+      error: `ファイルの読み取りに失敗しました: ${(e as Error).message}`,
+    };
   }
 
   const supabase = createAdminClient();

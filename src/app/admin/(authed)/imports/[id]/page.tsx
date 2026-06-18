@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/admin/TopBar";
 import { Card } from "@/components/admin/Card";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ImportSteps } from "@/components/admin/ImportSteps";
 import { diffSnapshots, type SnapshotDiff } from "@/lib/csv/snapshot-diff";
 import { RevalidateButton } from "./RevalidateButton";
 
@@ -73,14 +74,15 @@ export default async function ImportDetailPage({
 
   return (
     <>
-      <TopBar title="CSV取込ジョブ詳細" />
+      <TopBar title="商品データの取込" />
       <div className="flex flex-col gap-5 p-8">
+        <ImportSteps current={job.status === "completed" ? 4 : 2} />
         <div className="flex items-center justify-between">
           <Link
             href="/admin/imports"
             className="text-admin-xs text-admin-inkMute underline-offset-2 hover:underline"
           >
-            ← ジョブ一覧に戻る
+            ← 取込履歴に戻る
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <RevalidateButton jobId={job.id} />

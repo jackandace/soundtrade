@@ -13,10 +13,10 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
         severity: "error",
         code: "MISSING_HANDLE",
         rowNumber: p.rowNumber,
-        fieldName: "handle",
+        fieldName: "品番",
         fieldValue: "",
-        message: "Handle が空です",
-        suggestion: "Handle を入力してください",
+        message: "品番が空です（商品を識別できません）",
+        suggestion: "品番を入力してください",
         handle: null,
       });
     } else if (!HANDLE_RE.test(p.handle)) {
@@ -24,10 +24,10 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
         severity: "error",
         code: "INVALID_HANDLE_FORMAT",
         rowNumber: p.rowNumber,
-        fieldName: "handle",
+        fieldName: "品番",
         fieldValue: p.handle,
-        message: `Handle '${p.handle}' に不正な文字が含まれています`,
-        suggestion: "英小文字・数字・ハイフンのみ使用可",
+        message: `品番から作られるURL用キー '${p.handle}' に使えない文字が含まれています`,
+        suggestion: "品番は英数字とハイフンを中心にしてください",
         handle: p.handle,
       });
     } else {
@@ -41,9 +41,9 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
         severity: "error",
         code: "MISSING_TITLE",
         rowNumber: p.rowNumber,
-        fieldName: "product_name",
+        fieldName: "商品名",
         fieldValue: null,
-        message: "商品名 (Title) が空です",
+        message: "商品名が空です",
         suggestion: "商品名を入力してください",
         handle: p.handle || null,
       });
@@ -65,9 +65,9 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
         severity: "error",
         code: "MISSING_VENDOR",
         rowNumber: p.rowNumber,
-        fieldName: "maker",
+        fieldName: "メーカー",
         fieldValue: null,
-        message: "メーカー (Vendor) が空です",
+        message: "メーカーが空です",
         suggestion: "メーカー名を入力してください",
         handle: p.handle,
       });
@@ -94,10 +94,10 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
         severity: "error",
         code: "PRICE_ZERO_WITH_ACTIVE",
         rowNumber: p.rowNumber,
-        fieldName: "status",
+        fieldName: "公開状態",
         fieldValue: p.status,
-        message: "価格が 0 または未設定なのに Status=active です",
-        suggestion: "価格を入力するか、Status=draft に変更してください",
+        message: "価格が未入力なのに「公開」になっています",
+        suggestion: "定価を入れるか、公開状態を「下書き」にしてください",
         handle: p.handle,
       });
     }
@@ -107,10 +107,10 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
         severity: "error",
         code: "INVALID_STATUS",
         rowNumber: p.rowNumber,
-        fieldName: "status",
+        fieldName: "公開状態",
         fieldValue: p.status,
-        message: `Status '${p.status}' は許可されていません`,
-        suggestion: "active / draft / archived のいずれか",
+        message: `公開状態 '${p.status}' は使えません`,
+        suggestion: "「公開」か「下書き」を入力してください",
         handle: p.handle,
       });
     }
@@ -136,10 +136,10 @@ export function validateRows(parsed: ParsedImport): ValidationIssue[] {
           severity: "error",
           code: "DUPLICATE_HANDLE",
           rowNumber: row,
-          fieldName: "handle",
+          fieldName: "品番",
           fieldValue: handle,
-          message: `Handle '${handle}' が複数行に出現 (行: ${rows.join(", ")})`,
-          suggestion: "Handle を一意にしてください",
+          message: `品番が他の行と重複しています（行: ${rows.join(", ")}）`,
+          suggestion: "品番は商品ごとに別の値にしてください",
           handle,
         });
       }
