@@ -24,6 +24,7 @@ async function revalidateProductPaths(
   handle: string | null | undefined,
 ) {
   revalidatePath(`/admin/products/${productId}`);
+  revalidatePath("/admin/images");
   if (handle) revalidatePath(`/products/${handle}`);
   revalidatePath("/catalog");
   revalidatePath("/");
@@ -157,6 +158,73 @@ export async function deleteProductImage(
     .select("handle")
     .eq("id", img.product_id)
     .maybeSingle();
+  await revalidateProductPaths(img.product_id, product?.handle);
+  return { ok: true };
+}
+
+/** 既存画像を新しいファイルで差し替える（URL を更新し、古いファイルは削除） */
+export async function replaceProductImage(
+  imageId: string,
+  formData: FormData,
+): Promise<SimpleResult> {
+  await requireAdmin();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "ファイルが選択されていません" };
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    return { ok: false, error: "5MB を超えています" };
+  }
+  if (!ALLOWED_MIME.has(file.type)) {
+    return { ok: false, error: "jpg / png / webp / avif のみ対応" };
+  }
+
+  const supabase = createAdminClient();
+  const { data: img } = await supabase
+    .from("product_images")
+    .select("id, url, product_id")
+    .eq("id", imageId)
+    .maybeSingle();
+  if (!img) return { ok: false, error: "画像が見つかりません" };
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("handle")
+    .eq("id", img.product_id)
+    .maybeSingle();
+  const handle = product?.handle ?? "unknown";
+
+  const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
+  const newPath = `${handle}/replace-${imageId.slice(0, 8)}-${ext}.${ext}`;
+  const buf = await file.arrayBuffer();
+
+  const { error: upErr } = await supabase.storage
+    .from(BUCKET)
+    .upload(newPath, buf, { contentType: file.type, upsert: true });
+  if (upErr) {
+    return { ok: false, error: `アップロード失敗: ${upErr.message}` };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET).getPublicUrl(newPath);
+
+  const { error: updErr } = await supabase
+    .from("product_images")
+    .update({ url: publicUrl })
+    .eq("id", imageId);
+  if (updErr) {
+    await supabase.storage.from(BUCKET).remove([newPath]);
+    return { ok: false, error: `DB 更新失敗: ${updErr.message}` };
+  }
+
+  // 古いファイルを削除（自社 Storage のものだけ。外部URL参照だった場合は対象外）
+  const oldMatch = img.url.match(/\/product-images\/(.+)$/);
+  if (oldMatch && oldMatch[1] && oldMatch[1] !== newPath) {
+    await supabase.storage.from(BUCKET).remove([oldMatch[1]]);
+  }
+
   await revalidateProductPaths(img.product_id, product?.handle);
   return { ok: true };
 }
