@@ -1,13 +1,14 @@
 type Props = {
   defaultQuery?: string;
-  selectedCategory?: string | null;
+  /** 検索時に保持する他フィルタ（category, maker, tag など） */
+  hidden?: Record<string, string>;
 };
 
-export function SearchBox({ defaultQuery = "", selectedCategory }: Props) {
+export function SearchBox({ defaultQuery = "", hidden = {} }: Props) {
   return (
     <form action="/catalog" method="get" className="flex w-full gap-2">
-      {selectedCategory && (
-        <input type="hidden" name="category" value={selectedCategory} />
+      {Object.entries(hidden).map(([k, v]) =>
+        v ? <input key={k} type="hidden" name={k} value={v} /> : null,
       )}
       <div className="relative flex-1">
         <svg

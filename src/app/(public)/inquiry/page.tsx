@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/cart-context";
 import { Container } from "@/components/public/Container";
+import { loadBuyerProfile, saveBuyerProfile } from "@/lib/buyer-profile";
 import { submitInquiry, type SubmitInquiryResult } from "./actions";
 
 const INPUT_CLASSES =
@@ -20,6 +21,15 @@ export default function InquiryPage() {
   const [phone, setPhone] = useState("");
   const [desiredDelivery, setDesiredDelivery] = useState("できるだけ早く");
   const [message, setMessage] = useState("");
+
+  // 前回入力した会社情報を自動補完
+  useEffect(() => {
+    const p = loadBuyerProfile();
+    if (p.companyName) setCompanyName(p.companyName);
+    if (p.contactName) setContactName(p.contactName);
+    if (p.email) setEmail(p.email);
+    if (p.phone) setPhone(p.phone);
+  }, []);
 
   if (result?.ok) {
     return (
@@ -64,7 +74,10 @@ export default function InquiryPage() {
         quantity: i.qty,
       })),
     });
-    if (r.ok) clear();
+    if (r.ok) {
+      saveBuyerProfile({ companyName, contactName, email, phone });
+      clear();
+    }
     setResult(r);
     setSubmitting(false);
   };

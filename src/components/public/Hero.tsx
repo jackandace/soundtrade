@@ -15,9 +15,9 @@ export function Hero() {
             <br />
             一つの窓口から。
           </h1>
-          <p className="mb-8 max-w-[440px] text-sm leading-loose text-sumi-light md:text-[15px]">
+          <p className="mb-8 max-w-[480px] text-sm leading-loose text-sumi-light md:text-[15px]">
             管楽器・弦楽器・打楽器——主要メーカーの楽器をまとめて取り扱う卸プラットフォーム。
-            楽器店・スタジオ・教育機関のお客様に、確かな品質と価格でお応えします。
+            楽器店、レンタル事業者、各種小売店、オフィスなどの法人様や楽器の講師等をされている個人事業主様に、確かな品質と価格でお応えします。
           </p>
           <div className="flex flex-wrap gap-3">
             <Link

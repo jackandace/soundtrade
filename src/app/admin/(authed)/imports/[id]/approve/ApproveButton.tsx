@@ -12,6 +12,7 @@ type Props = {
 export function ApproveButton({ jobId, productsCount }: Props) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [partialUpdate, setPartialUpdate] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<
     | { ok: true; productsAffected: number; variantsAffected: number; specsAffected: number; snapshotId: string }
@@ -30,7 +31,7 @@ export function ApproveButton({ jobId, productsCount }: Props) {
 
   const onApprove = async () => {
     setSubmitting(true);
-    const r = await approveAndApply(jobId);
+    const r = await approveAndApply(jobId, partialUpdate);
     setSubmitting(false);
     setResult(r);
     if (r.ok) {
@@ -117,12 +118,28 @@ export function ApproveButton({ jobId, productsCount }: Props) {
             <p className="mb-4 text-admin-sm leading-relaxed text-admin-ink">
               <strong>{productsCount} 商品</strong>を本番の products テーブルに UPSERT します。
             </p>
-            <ul className="mb-5 grid gap-1.5 text-admin-sm text-admin-inkSub">
+            <ul className="mb-4 grid gap-1.5 text-admin-sm text-admin-inkSub">
               <li>・反映前にスナップショットを自動作成します</li>
               <li>・既存ハンドルは更新、なければ新規追加されます</li>
               <li>・公開サイトに即座に反映されます</li>
               <li>・取消はスナップショットからのロールバック（super_admin のみ）で行います</li>
             </ul>
+            <label className="mb-5 flex items-start gap-2 rounded-md border border-admin-line bg-admin-surfaceAlt p-3 text-admin-sm text-admin-ink">
+              <input
+                type="checkbox"
+                checked={partialUpdate}
+                onChange={(e) => setPartialUpdate(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0"
+              />
+              <span>
+                <strong>部分更新（空欄の列は既存値を維持）</strong>
+                <br />
+                <span className="text-admin-xs text-admin-inkSub">
+                  ONのまま: CSVに値がある列だけ更新（価格だけのCSVで商品名等が消えない）。
+                  OFF: 既存商品をCSVの内容で全置換します。
+                </span>
+              </span>
+            </label>
             <div className="flex justify-end gap-2">
               <button
                 type="button"

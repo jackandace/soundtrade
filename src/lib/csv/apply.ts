@@ -61,6 +61,7 @@ export async function applyImport(
   supabase: SupabaseClient,
   jobId: string,
   adminId: string,
+  partialUpdate = false,
 ): Promise<ApplyResult> {
   const now = new Date().toISOString();
 
@@ -122,8 +123,9 @@ export async function applyImport(
       throw new Error("反映する商品がありません");
     }
 
-    // 4. products UPSERT (onConflict: handle)
-    const productPayload = sProducts.map((p) => ({
+    // 4. products 反映（新規 insert / 既存 update）
+    //    partialUpdate=true のとき、既存商品は CSV に値がある列だけ更新（空欄は維持）。
+    const fullPayload = (p: StagingProduct) => ({
       handle: p.handle,
       sku_base: p.sku_base || p.handle.toUpperCase(),
       product_name: p.product_name ?? p.handle,
@@ -137,20 +139,84 @@ export async function applyImport(
       msrp: p.msrp,
       msrp_incl_tax: p.msrp_incl_tax,
       status: p.status ?? "draft",
-      updated_at: new Date().toISOString(),
-    }));
+      tags: p.tags,
+      updated_at: now,
+    });
+    // 既存商品向け：値が入っている列だけを抽出（partial 用）
+    const partialPayload = (p: StagingProduct) => {
+      const out: Record<string, unknown> = { updated_at: now };
+      const set = (k: string, v: unknown) => {
+        if (v !== null && v !== undefined && v !== "") out[k] = v;
+      };
+      set("sku_base", p.sku_base);
+      set("product_name", p.product_name);
+      set("maker", p.maker);
+      set("category_l1", p.category_l1);
+      set("category_l2", p.category_l2);
+      set("category_l3", p.category_l3);
+      set("description_short", p.description_short);
+      set("description_long", p.description_long);
+      set("body_html", p.body_html);
+      set("msrp", p.msrp);
+      set("msrp_incl_tax", p.msrp_incl_tax);
+      set("status", p.status);
+      set("tags", p.tags);
+      return out;
+    };
 
-    const { data: upsertedProducts, error: upErr } = await supabase
+    const handles = sProducts.map((p) => p.handle);
+    const { data: existingRows } = await supabase
       .from("products")
-      .upsert(productPayload, { onConflict: "handle" })
-      .select("id, handle");
-    if (upErr || !upsertedProducts) {
-      throw new Error(`products UPSERT 失敗: ${upErr?.message ?? "unknown"}`);
-    }
+      .select("id, handle")
+      .in("handle", handles);
+    const existingByHandle = new Map<string, string>();
+    for (const r of existingRows ?? []) existingByHandle.set(r.handle, r.id);
 
     const productIdByHandle = new Map<string, string>();
-    for (const p of upsertedProducts) {
-      productIdByHandle.set(p.handle, p.id);
+
+    // 新規商品はまとめて insert
+    const newProducts = sProducts.filter((p) => !existingByHandle.has(p.handle));
+    if (newProducts.length > 0) {
+      const { data: inserted, error: insErr } = await supabase
+        .from("products")
+        .insert(newProducts.map(fullPayload))
+        .select("id, handle");
+      if (insErr || !inserted) {
+        throw new Error(`products 追加失敗: ${insErr?.message ?? "unknown"}`);
+      }
+      for (const r of inserted) productIdByHandle.set(r.handle, r.id);
+    }
+
+    // 既存商品は update
+    const existingProducts = sProducts.filter((p) =>
+      existingByHandle.has(p.handle),
+    );
+    if (!partialUpdate && existingProducts.length > 0) {
+      // フル置換：bulk upsert
+      const { data: upserted, error: upErr } = await supabase
+        .from("products")
+        .upsert(existingProducts.map(fullPayload), { onConflict: "handle" })
+        .select("id, handle");
+      if (upErr || !upserted) {
+        throw new Error(`products 更新失敗: ${upErr?.message ?? "unknown"}`);
+      }
+      for (const r of upserted) productIdByHandle.set(r.handle, r.id);
+    } else {
+      // 部分更新：1 件ずつ、値のある列だけ更新
+      for (const p of existingProducts) {
+        const id = existingByHandle.get(p.handle)!;
+        productIdByHandle.set(p.handle, id);
+        const payload = partialPayload(p);
+        if (Object.keys(payload).length > 1) {
+          const { error: updErr } = await supabase
+            .from("products")
+            .update(payload)
+            .eq("id", id);
+          if (updErr) {
+            throw new Error(`products 部分更新失敗: ${updErr.message}`);
+          }
+        }
+      }
     }
 
     // 5. variants UPSERT (onConflict: variant_sku)
@@ -191,14 +257,21 @@ export async function applyImport(
       }
     }
 
-    // 6. product_specs は対象 product_id ぶんを全削除 → 再 INSERT
-    const touchedProductIds = Array.from(productIdByHandle.values());
+    // 6. product_specs は「staging に spec がある商品」だけ差し替え
+    //    （CSV に spec を含めない部分更新で、既存スペックを消さないため）
+    const specProductIds = Array.from(
+      new Set(
+        sSpecs
+          .map((s) => productIdByHandle.get(s.handle))
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
     let specsAffected = 0;
-    if (touchedProductIds.length > 0) {
+    if (specProductIds.length > 0) {
       await supabase
         .from("product_specs")
         .delete()
-        .in("product_id", touchedProductIds);
+        .in("product_id", specProductIds);
 
       if (sSpecs.length > 0) {
         const specPayload = sSpecs
@@ -243,6 +316,8 @@ export async function applyImport(
     );
     const snapshotIdAfter = snapshotAfterRaw ? String(snapshotAfterRaw) : null;
 
+    const productsAffected = productIdByHandle.size;
+
     // 8. 監査ログ
     await supabase.rpc("write_audit_log", {
       p_action: "import.apply",
@@ -250,7 +325,9 @@ export async function applyImport(
       p_resource_id: jobId,
       p_payload: {
         snapshot_id: snapshotId,
-        products_affected: productPayload.length,
+        partial_update: partialUpdate,
+        products_affected: productsAffected,
+        products_new: newProducts.length,
         variants_affected: variantsAffected,
         specs_affected: specsAffected,
       },
@@ -264,14 +341,15 @@ export async function applyImport(
         status: "completed",
         completed_at: new Date().toISOString(),
         snapshot_id_after: snapshotIdAfter,
-        new_products: productPayload.length,
+        new_products: newProducts.length,
+        updated_products: productsAffected - newProducts.length,
       })
       .eq("id", jobId);
 
     return {
       ok: true,
       snapshotId,
-      productsAffected: productPayload.length,
+      productsAffected,
       variantsAffected,
       specsAffected,
     };

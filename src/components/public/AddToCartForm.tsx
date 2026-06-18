@@ -38,7 +38,7 @@ export function AddToCartForm({
         >
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
-        お見積もりでご案内します
+        見積をご案内します
       </div>
       <p className="mb-5 text-xs leading-relaxed text-sumi-light">
         卸価格はお取引内容・数量に応じて個別にご案内しております。

@@ -9,6 +9,7 @@ import { AddToCartForm } from "@/components/public/AddToCartForm";
 import { ProductJsonLd } from "@/components/json-ld/Product";
 import { SITE_DEFAULT_DESCRIPTION } from "@/lib/seo";
 import { formatListPrice } from "@/lib/price";
+import { parseTags } from "@/lib/tags";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function ProductDetailPage({
   const { data: product, error } = await supabase
     .from("products")
     .select(
-      "id, product_name, handle, sku_base, maker, category_l1, category_l2, category_l3, description_short, description_long, msrp_incl_tax",
+      "id, product_name, handle, sku_base, maker, category_l1, category_l2, category_l3, description_short, description_long, msrp_incl_tax, tags",
     )
     .eq("handle", params.handle)
     .eq("status", "active")
@@ -84,6 +85,7 @@ export default async function ProductDetailPage({
   const mainImage = images[0]?.url ?? null;
   const thumbs = images.slice(0, 4);
   const listPrice = formatListPrice(product.msrp_incl_tax);
+  const tags = parseTags(product.tags);
 
   return (
     <div className="min-h-[70vh] bg-ivory">
@@ -167,8 +169,22 @@ export default async function ProductDetailPage({
               {product.product_name}
             </h1>
             {product.category_l3 && (
-              <div className="mb-6 text-sm text-sumi-light">
+              <div className="mb-4 text-sm text-sumi-light">
                 {product.category_l3}
+              </div>
+            )}
+
+            {tags.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-2">
+                {tags.map((t) => (
+                  <Link
+                    key={t}
+                    href={`/catalog?tag=${encodeURIComponent(t)}`}
+                    className="rounded-sm border border-line bg-beige px-2.5 py-1 text-xs text-sumi-light transition-colors hover:border-line-mid hover:text-sumi"
+                  >
+                    {t}
+                  </Link>
+                ))}
               </div>
             )}
 
@@ -222,8 +238,8 @@ export default async function ProductDetailPage({
             />
 
             <p className="mt-4 text-xs leading-relaxed text-muted">
-              ※ 卸価格は見積依頼後に担当者よりご案内します。
-              受注生産品は納期に4〜8週間程度を要する場合があります。
+              ※
+              当プラットフォームは楽器店、レンタル事業者、各種小売店、オフィスなどの法人様や楽器の講師等をされている個人事業主様を対象としております。一般消費者の皆さまは小売店からの購入をお願いします。卸価格は見積依頼後に担当者よりご案内します。
             </p>
           </div>
         </div>

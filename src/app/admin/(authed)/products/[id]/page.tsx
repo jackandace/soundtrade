@@ -17,7 +17,7 @@ export default async function ProductEditPage({
   const { data: product, error } = await supabase
     .from("products")
     .select(
-      "id, handle, sku_base, product_name, maker, category_l1, category_l2, category_l3, description_short, description_long, msrp, msrp_incl_tax, status, created_at, updated_at",
+      "id, handle, sku_base, product_name, maker, category_l1, category_l2, category_l3, description_short, description_long, tags, msrp, msrp_incl_tax, status, created_at, updated_at",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -81,6 +81,7 @@ export default async function ProductEditPage({
                 categoryL3: product.category_l3 ?? "",
                 descriptionShort: product.description_short ?? "",
                 descriptionLong: product.description_long ?? "",
+                tags: product.tags ?? "",
               }}
             />
           </Card>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { parseTags, joinTags } from "@/lib/tags";
 
 const VALID_STATUSES = ["active", "draft", "archived"] as const;
 
@@ -16,6 +17,7 @@ export type UpdateProductArgs = {
   categoryL3: string;
   descriptionShort: string;
   descriptionLong: string;
+  tags: string;
 };
 
 export type UpdateProductResult =
@@ -46,6 +48,7 @@ export async function updateProduct(
       category_l3: args.categoryL3 || null,
       description_short: args.descriptionShort || null,
       description_long: args.descriptionLong || null,
+      tags: joinTags(parseTags(args.tags)) || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", args.id);

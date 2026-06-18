@@ -20,6 +20,7 @@ type Props = {
     categoryL3: string;
     descriptionShort: string;
     descriptionLong: string;
+    tags: string;
   };
 };
 
@@ -32,6 +33,7 @@ export function ProductEditForm({ id, initial }: Props) {
   const [categoryL3, setCategoryL3] = useState(initial.categoryL3);
   const [descriptionShort, setDescriptionShort] = useState(initial.descriptionShort);
   const [descriptionLong, setDescriptionLong] = useState(initial.descriptionLong);
+  const [tags, setTags] = useState(initial.tags);
 
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -50,6 +52,7 @@ export function ProductEditForm({ id, initial }: Props) {
       categoryL3,
       descriptionShort,
       descriptionLong,
+      tags,
     });
     setSubmitting(false);
     setMessage(
@@ -138,6 +141,19 @@ export function ProductEditForm({ id, initial }: Props) {
           onChange={(e) => setDescriptionLong(e.target.value)}
           className={`${INPUT} resize-y`}
         />
+      </Field>
+
+      <Field label="タグ（カンマ区切り）">
+        <input
+          type="text"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="例: 初心者, 入門, 学校備品"
+          className={INPUT}
+        />
+        <p className="mt-1 text-admin-xs text-admin-inkMute">
+          カテゴリで分類しきれない横断的なまとめ方に使えます。公開サイトで絞り込み・検索の対象になります。
+        </p>
       </Field>
 
       {message && (

@@ -141,7 +141,7 @@ export default function CartPage() {
             href="/catalog"
             className="mt-3 flex w-full items-center justify-center border border-line-mid bg-transparent p-3.5 text-[13px] tracking-wider text-sumi"
           >
-            買い物を続ける
+            商品一覧に戻る
           </Link>
         </div>
       </div>

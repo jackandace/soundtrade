@@ -8,7 +8,10 @@ import { sendImportSuccess } from "@/lib/email/import";
 import { getAdminEmails } from "@/lib/email/client";
 import { getSiteUrl } from "@/lib/seo";
 
-export async function approveAndApply(jobId: string): Promise<ApplyResult> {
+export async function approveAndApply(
+  jobId: string,
+  partialUpdate = false,
+): Promise<ApplyResult> {
   const admin = await requireAdmin();
 
   if (admin.role !== "super_admin" && admin.role !== "admin") {
@@ -41,7 +44,7 @@ export async function approveAndApply(jobId: string): Promise<ApplyResult> {
     return { ok: false, error: "反映する商品行がありません" };
   }
 
-  const result = await applyImport(supabase, jobId, admin.id);
+  const result = await applyImport(supabase, jobId, admin.id, partialUpdate);
 
   if (result.ok) {
     const adminEmails = await getAdminEmails(async () => {

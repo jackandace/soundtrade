@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Container } from "@/components/public/Container";
+import { loadBuyerProfile, saveBuyerProfile } from "@/lib/buyer-profile";
 import { submitContact, type SubmitContactResult } from "./actions";
 
 const INPUT_CLASSES =
@@ -53,6 +54,15 @@ function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitContactResult | null>(null);
 
+  // 前回入力した会社情報を自動補完
+  useEffect(() => {
+    const p = loadBuyerProfile();
+    if (p.companyName) setCompanyName(p.companyName);
+    if (p.contactName) setContactName(p.contactName);
+    if (p.email) setEmail(p.email);
+    if (p.phone) setPhone(p.phone);
+  }, []);
+
   if (result?.ok) {
     return (
       <CompleteView
@@ -74,6 +84,7 @@ function ContactForm() {
       quantity,
       message,
     });
+    if (r.ok) saveBuyerProfile({ companyName, contactName, email, phone });
     setResult(r);
     setSubmitting(false);
   };
