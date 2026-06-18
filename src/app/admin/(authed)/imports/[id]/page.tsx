@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/admin/TopBar";
 import { Card } from "@/components/admin/Card";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { diffSnapshots, type SnapshotDiff } from "@/lib/csv/snapshot-diff";
 import { RevalidateButton } from "./RevalidateButton";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,27 @@ export default async function ImportDetailPage({
   const errs = (errors ?? []).filter((e) => e.severity === "error");
   const warns = (errors ?? []).filter((e) => e.severity === "warning");
   const st = JOB_STATUS[job.status] ?? JOB_STATUS.pending;
+
+  // 反映済みジョブは、反映前/後スナップショットを比較して変更内容を表示
+  let changeDiff: SnapshotDiff | null = null;
+  if (
+    job.status === "completed" &&
+    job.snapshot_id_before &&
+    job.snapshot_id_after
+  ) {
+    const { data: snaps } = await supabase
+      .from("product_snapshots")
+      .select("id, data")
+      .in("id", [job.snapshot_id_before, job.snapshot_id_after]);
+    const before = snaps?.find((s) => s.id === job.snapshot_id_before)?.data;
+    const after = snaps?.find((s) => s.id === job.snapshot_id_after)?.data;
+    if (before && after) {
+      changeDiff = diffSnapshots(
+        before as Parameters<typeof diffSnapshots>[0],
+        after as Parameters<typeof diffSnapshots>[1],
+      );
+    }
+  }
 
   return (
     <>
@@ -122,6 +144,121 @@ export default async function ImportDetailPage({
           <Stat label="警告" value={job.warning_rows} color="text-admin-warning" />
           <Stat label="エラー" value={job.error_rows} color="text-admin-danger" />
         </div>
+
+        {/* 反映済みジョブ：実際に何が変わったか */}
+        {job.status === "completed" && (
+          <Card title="反映による変更">
+            {!changeDiff ? (
+              <p className="py-4 text-admin-sm text-admin-inkSub">
+                新規 {job.new_products ?? 0} 件 / 更新{" "}
+                {job.updated_products ?? 0} 件
+                （詳細はスナップショットが見つからないため表示できません）
+              </p>
+            ) : (
+              <div className="grid gap-5">
+                <div className="flex flex-wrap gap-6 text-admin-sm">
+                  <span>
+                    <span className="text-admin-inkSub">新規追加 </span>
+                    <span className="font-dm text-admin-h3 font-bold text-admin-success">
+                      {changeDiff.newProducts.length}
+                    </span>
+                    <span className="text-admin-inkSub"> 件</span>
+                  </span>
+                  <span>
+                    <span className="text-admin-inkSub">更新 </span>
+                    <span className="font-dm text-admin-h3 font-bold text-admin-info">
+                      {changeDiff.updated.length}
+                    </span>
+                    <span className="text-admin-inkSub"> 件</span>
+                  </span>
+                  {changeDiff.removedCount > 0 && (
+                    <span>
+                      <span className="text-admin-inkSub">削除 </span>
+                      <span className="font-dm text-admin-h3 font-bold text-admin-danger">
+                        {changeDiff.removedCount}
+                      </span>
+                      <span className="text-admin-inkSub"> 件</span>
+                    </span>
+                  )}
+                </div>
+
+                {changeDiff.updated.length > 0 && (
+                  <div>
+                    <div className="mb-2 text-admin-sm font-medium text-admin-ink">
+                      更新された商品（変更点）
+                    </div>
+                    <div className="grid gap-2">
+                      {changeDiff.updated.slice(0, 100).map((u) => (
+                        <div
+                          key={u.handle}
+                          className="border-b border-admin-lineLight pb-2 last:border-0"
+                        >
+                          <div className="text-admin-sm text-admin-ink">
+                            {u.name}
+                            <span className="ml-2 font-dm text-admin-xs text-admin-inkMute">
+                              {u.handle}
+                            </span>
+                          </div>
+                          <div className="mt-1 grid gap-0.5">
+                            {u.changes.map((c) => (
+                              <div key={c.field} className="text-admin-xs">
+                                <span className="text-admin-inkSub">
+                                  {c.label}:{" "}
+                                </span>
+                                <span className="text-admin-danger line-through">
+                                  {c.before || "(空)"}
+                                </span>
+                                <span className="mx-1.5 text-admin-inkMute">→</span>
+                                <span className="text-admin-success">
+                                  {c.after || "(空)"}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {changeDiff.updated.length > 100 && (
+                        <p className="pt-1 text-center text-admin-xs text-admin-inkMute">
+                          ...残り {changeDiff.updated.length - 100} 件は省略
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {changeDiff.newProducts.length > 0 && (
+                  <div>
+                    <div className="mb-2 text-admin-sm font-medium text-admin-ink">
+                      新規追加された商品
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {changeDiff.newProducts.slice(0, 60).map((p) => (
+                        <span
+                          key={p.handle}
+                          className="text-admin-xs text-admin-inkSub"
+                        >
+                          {p.name}
+                        </span>
+                      ))}
+                      {changeDiff.newProducts.length > 60 && (
+                        <span className="text-admin-xs text-admin-inkMute">
+                          …他 {changeDiff.newProducts.length - 60} 件
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {changeDiff.updated.length === 0 &&
+                  changeDiff.newProducts.length === 0 && (
+                    <p className="text-admin-sm text-admin-inkSub">
+                      商品データの変更はありませんでした（バリアント・スペックのみ等）。
+                    </p>
+                  )}
+              </div>
+            )}
+          </Card>
+        )}
 
         {errs.length === 0 && warns.length === 0 && job.status !== "failed" ? (
           <Card>

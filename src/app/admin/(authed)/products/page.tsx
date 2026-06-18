@@ -2,17 +2,9 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/admin/TopBar";
 import { Card } from "@/components/admin/Card";
-import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ProductBulkTable, type ProductRowData } from "./ProductBulkTable";
 
 export const dynamic = "force-dynamic";
-
-type StatusVariant = "success" | "warning" | "danger" | "info" | "neutral";
-
-const PRODUCT_STATUS: Record<string, { label: string; variant: StatusVariant }> = {
-  active: { label: "公開中", variant: "success" },
-  draft: { label: "下書き", variant: "neutral" },
-  archived: { label: "非公開", variant: "danger" },
-};
 
 const STATUS_TABS = [
   { id: "all", label: "すべて" },
@@ -21,49 +13,82 @@ const STATUS_TABS = [
   { id: "archived", label: "非公開" },
 ];
 
+type SearchParams = {
+  status?: string;
+  q?: string;
+  category?: string;
+  maker?: string;
+  tag?: string;
+};
+
 export default async function ProductsListPage({
   searchParams,
 }: {
-  searchParams: { status?: string; q?: string };
+  searchParams: SearchParams;
 }) {
   const supabase = createAdminClient();
   const selectedStatus = searchParams.status ?? "all";
   const q = (searchParams.q ?? "").trim();
+  const category = (searchParams.category ?? "").trim();
+  const maker = (searchParams.maker ?? "").trim();
+  const tag = (searchParams.tag ?? "").trim();
 
   let query = supabase
     .from("products")
-    .select("id, handle, product_name, category_l1, maker, status, updated_at")
+    .select(
+      "id, handle, product_name, category_l2, maker, status, tags, updated_at",
+    )
     .order("updated_at", { ascending: false })
-    .limit(100);
+    .limit(200);
 
-  if (selectedStatus !== "all" && PRODUCT_STATUS[selectedStatus]) {
-    query = query.eq("status", selectedStatus);
-  }
+  if (selectedStatus !== "all") query = query.eq("status", selectedStatus);
+  if (category) query = query.eq("category_l2", category);
+  if (maker) query = query.eq("maker", maker);
+  if (tag) query = query.ilike("tags", `%${tag}%`);
   if (q) {
-    query = query.or(`product_name.ilike.%${q}%,handle.ilike.%${q}%,sku_base.ilike.%${q}%`);
+    query = query.or(
+      `product_name.ilike.%${q}%,handle.ilike.%${q}%,sku_base.ilike.%${q}%`,
+    );
   }
 
-  const { data: rows, error } = await query;
+  // 絞り込みの選択肢（カテゴリ/メーカー）と登録タグ
+  const [{ data: rows, error }, { data: facetRows }, { data: tagRows }] =
+    await Promise.all([
+      query,
+      supabase.from("products").select("category_l2, maker"),
+      supabase.from("tag_master").select("name").order("name"),
+    ]);
+
+  const categorySet = new Set<string>();
+  const makerSet = new Set<string>();
+  for (const r of facetRows ?? []) {
+    if (r.category_l2) categorySet.add(r.category_l2);
+    if (r.maker) makerSet.add(r.maker);
+  }
+  const categories = Array.from(categorySet).sort();
+  const makers = Array.from(makerSet).sort();
+  const registeredTags = (tagRows ?? []).map((t) => t.name as string);
 
   return (
     <>
       <TopBar title="商品マスタ" />
       <div className="flex flex-col gap-5 p-8">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* ステータスタブ */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-1 rounded-md border border-admin-line bg-admin-surface p-1">
             {STATUS_TABS.map((t) => {
               const active = selectedStatus === t.id;
-              const href = (() => {
-                const sp = new URLSearchParams();
-                if (t.id !== "all") sp.set("status", t.id);
-                if (q) sp.set("q", q);
-                const s = sp.toString();
-                return s ? `/admin/products?${s}` : "/admin/products";
-              })();
+              const sp = new URLSearchParams();
+              if (t.id !== "all") sp.set("status", t.id);
+              if (q) sp.set("q", q);
+              if (category) sp.set("category", category);
+              if (maker) sp.set("maker", maker);
+              if (tag) sp.set("tag", tag);
+              const s = sp.toString();
               return (
                 <Link
                   key={t.id}
-                  href={href}
+                  href={s ? `/admin/products?${s}` : "/admin/products"}
                   className={`flex min-h-10 items-center rounded px-4 text-admin-sm font-medium ${
                     active
                       ? "bg-admin-navy text-white"
@@ -75,25 +100,67 @@ export default async function ProductsListPage({
               );
             })}
           </div>
-          <form className="flex flex-1 items-center gap-2" action="/admin/products">
-            {selectedStatus !== "all" && (
-              <input type="hidden" name="status" value={selectedStatus} />
-            )}
+          <Link
+            href="/admin/tags"
+            className="flex min-h-10 items-center rounded-md border border-admin-line bg-admin-surface px-4 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt"
+          >
+            タグ管理 →
+          </Link>
+        </div>
+
+        {/* 詳細検索（カテゴリ / メーカー / タグ / キーワード） */}
+        <form
+          action="/admin/products"
+          className="flex flex-wrap items-end gap-3 rounded-md border border-admin-line bg-admin-surface p-3"
+        >
+          {selectedStatus !== "all" && (
+            <input type="hidden" name="status" value={selectedStatus} />
+          )}
+          <Facet label="カテゴリ" name="category" value={category} options={categories} />
+          <Facet label="メーカー" name="maker" value={maker} options={makers} />
+          <div>
+            <label className="mb-1 block text-admin-xs text-admin-inkSub">
+              タグ
+            </label>
+            <input
+              type="text"
+              name="tag"
+              defaultValue={tag}
+              placeholder="タグで絞り込み"
+              className="block min-h-10 w-40 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="mb-1 block text-admin-xs text-admin-inkSub">
+              キーワード
+            </label>
             <input
               type="search"
               name="q"
               defaultValue={q}
-              placeholder="商品名・handle・SKU で検索"
-              className="block min-h-10 flex-1 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
+              placeholder="商品名・handle・SKU"
+              className="block min-h-10 w-full rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
             />
-            <button
-              type="submit"
-              className="flex min-h-10 items-center rounded-md border border-admin-line bg-admin-surface px-4 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt"
+          </div>
+          <button
+            type="submit"
+            className="flex min-h-10 items-center rounded-md bg-admin-navy px-5 text-admin-sm font-bold text-white hover:bg-admin-navyHover"
+          >
+            絞り込む
+          </button>
+          {(category || maker || tag || q) && (
+            <Link
+              href={
+                selectedStatus !== "all"
+                  ? `/admin/products?status=${selectedStatus}`
+                  : "/admin/products"
+              }
+              className="text-admin-xs text-admin-inkMute underline-offset-2 hover:underline"
             >
-              検索
-            </button>
-          </form>
-        </div>
+              クリア
+            </Link>
+          )}
+        </form>
 
         <Card>
           {error ? (
@@ -107,59 +174,46 @@ export default async function ProductsListPage({
           ) : (
             <>
               <p className="mb-3 text-admin-xs text-admin-inkMute">
-                上位 100 件まで表示しています
+                {rows?.length ?? 0} 件表示（上限 200 件）。チェックを入れて上のバーで一括タグ付けできます。
               </p>
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-admin-lineLight text-left text-admin-xs text-admin-inkMute">
-                    <th className="py-3 font-medium">商品名</th>
-                    <th className="py-3 font-medium">handle</th>
-                    <th className="py-3 font-medium">カテゴリ</th>
-                    <th className="py-3 font-medium">メーカー</th>
-                    <th className="py-3 font-medium">ステータス</th>
-                    <th className="py-3 font-medium">最終更新</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(rows ?? []).map((r) => {
-                    const st = PRODUCT_STATUS[r.status] ?? PRODUCT_STATUS.draft;
-                    return (
-                      <tr
-                        key={r.id}
-                        className="border-b border-admin-lineLight last:border-0 hover:bg-admin-surfaceAlt"
-                      >
-                        <td className="py-3 text-admin-sm">
-                          <Link
-                            href={`/admin/products/${r.id}`}
-                            className="text-admin-ink underline-offset-2 hover:underline"
-                          >
-                            {r.product_name}
-                          </Link>
-                        </td>
-                        <td className="py-3 font-dm text-admin-xs text-admin-inkMute">
-                          {r.handle}
-                        </td>
-                        <td className="py-3 text-admin-sm text-admin-inkSub">
-                          {r.category_l1 ?? "—"}
-                        </td>
-                        <td className="py-3 text-admin-sm text-admin-inkSub">
-                          {r.maker ?? "—"}
-                        </td>
-                        <td className="py-3">
-                          <StatusBadge variant={st.variant}>{st.label}</StatusBadge>
-                        </td>
-                        <td className="py-3 text-admin-xs text-admin-inkMute">
-                          {new Date(r.updated_at).toLocaleString("ja-JP")}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <ProductBulkTable
+                rows={(rows ?? []) as ProductRowData[]}
+                registeredTags={registeredTags}
+              />
             </>
           )}
         </Card>
       </div>
     </>
+  );
+}
+
+function Facet({
+  label,
+  name,
+  value,
+  options,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  options: string[];
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-admin-xs text-admin-inkSub">{label}</label>
+      <select
+        name={name}
+        defaultValue={value}
+        className="block min-h-10 w-40 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
+      >
+        <option value="">すべて</option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
