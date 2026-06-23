@@ -100,12 +100,32 @@ export default async function ProductsListPage({
               );
             })}
           </div>
-          <Link
-            href="/admin/tags"
-            className="flex min-h-10 items-center rounded-md border border-admin-line bg-admin-surface px-4 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt"
-          >
-            タグ管理 →
-          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={(() => {
+                const sp = new URLSearchParams();
+                if (selectedStatus !== "all") sp.set("status", selectedStatus);
+                if (category) sp.set("category", category);
+                if (maker) sp.set("maker", maker);
+                if (tag) sp.set("tag", tag);
+                if (q) sp.set("q", q);
+                const s = sp.toString();
+                return `/admin/products/export${s ? `?${s}` : ""}`;
+              })()}
+              className="flex min-h-10 items-center gap-1.5 rounded-md border border-admin-line bg-admin-surface px-4 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Excelで書き出し
+            </a>
+            <Link
+              href="/admin/tags"
+              className="flex min-h-10 items-center rounded-md border border-admin-line bg-admin-surface px-4 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt"
+            >
+              タグ管理 →
+            </Link>
+          </div>
         </div>
 
         {/* 詳細検索（カテゴリ / メーカー / タグ / キーワード） */}

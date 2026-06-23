@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { parseTags } from "@/lib/tags";
-import { bulkAddTag, bulkRemoveTag } from "./bulk-actions";
+import { bulkAddTag, bulkRemoveTag, bulkSetStatus } from "./bulk-actions";
 
 type StatusVariant = "success" | "warning" | "danger" | "info" | "neutral";
 const PRODUCT_STATUS: Record<string, { label: string; variant: StatusVariant }> = {
@@ -57,6 +57,23 @@ export function ProductBulkTable({
 
   const effectiveTag = (freeTag.trim() || tag).trim();
 
+  const runStatus = async (status: "active" | "draft" | "archived") => {
+    const label = PRODUCT_STATUS[status].label;
+    if (!confirm(`選択中の ${selected.size} 商品を「${label}」に変更します。よろしいですか？`))
+      return;
+    setBusy(true);
+    setMsg(null);
+    const r = await bulkSetStatus(Array.from(selected), status);
+    setBusy(false);
+    if (r.ok) {
+      setMsg({ type: "ok", text: `✓ ${r.affected} 商品を「${label}」にしました` });
+      setSelected(new Set());
+      startTransition(() => router.refresh());
+    } else {
+      setMsg({ type: "err", text: r.error });
+    }
+  };
+
   const run = async (mode: "add" | "remove") => {
     if (!effectiveTag) {
       setMsg({ type: "err", text: "タグを選ぶか入力してください" });
@@ -86,55 +103,84 @@ export function ProductBulkTable({
   return (
     <div>
       {/* 一括操作バー */}
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-admin-line bg-admin-surfaceAlt p-3">
-        <span className="text-admin-sm font-medium text-admin-ink">
-          選択 {selected.size} 件
-        </span>
-        <span className="text-admin-inkMute">→</span>
-        <select
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
-          className="min-h-10 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
-        >
-          <option value="">登録タグから選ぶ…</option>
-          {registeredTags.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <span className="text-admin-xs text-admin-inkMute">または</span>
-        <input
-          type="text"
-          value={freeTag}
-          onChange={(e) => setFreeTag(e.target.value)}
-          placeholder="タグを直接入力"
-          className="min-h-10 w-40 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
-        />
-        <button
-          type="button"
-          onClick={() => run("add")}
-          disabled={busy || !someChecked}
-          className="flex min-h-10 items-center rounded-md bg-admin-navy px-4 text-admin-sm font-bold text-white hover:bg-admin-navyHover disabled:opacity-40"
-        >
-          タグ追加
-        </button>
-        <button
-          type="button"
-          onClick={() => run("remove")}
-          disabled={busy || !someChecked}
-          className="flex min-h-10 items-center rounded-md border border-admin-line bg-admin-surface px-4 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt disabled:opacity-40"
-        >
-          タグ削除
-        </button>
+      <div className="mb-4 grid gap-2 rounded-md border border-admin-line bg-admin-surfaceAlt p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="min-w-[72px] text-admin-sm font-medium text-admin-ink">
+            選択 {selected.size} 件
+          </span>
+          <span className="text-admin-xs text-admin-inkSub">公開状態:</span>
+          <button
+            type="button"
+            onClick={() => runStatus("active")}
+            disabled={busy || !someChecked}
+            className="flex min-h-9 items-center rounded-md bg-admin-success px-3 text-admin-sm font-bold text-white hover:opacity-90 disabled:opacity-40"
+          >
+            公開にする
+          </button>
+          <button
+            type="button"
+            onClick={() => runStatus("draft")}
+            disabled={busy || !someChecked}
+            className="flex min-h-9 items-center rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt disabled:opacity-40"
+          >
+            下書きにする
+          </button>
+          <button
+            type="button"
+            onClick={() => runStatus("archived")}
+            disabled={busy || !someChecked}
+            className="flex min-h-9 items-center rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt disabled:opacity-40"
+          >
+            非公開にする
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="min-w-[72px] text-admin-xs text-admin-inkSub">タグ:</span>
+          <select
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            className="min-h-9 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
+          >
+            <option value="">登録タグから選ぶ…</option>
+            {registeredTags.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <span className="text-admin-xs text-admin-inkMute">または</span>
+          <input
+            type="text"
+            value={freeTag}
+            onChange={(e) => setFreeTag(e.target.value)}
+            placeholder="タグを直接入力"
+            className="min-h-9 w-36 rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm outline-none focus:border-admin-navy"
+          />
+          <button
+            type="button"
+            onClick={() => run("add")}
+            disabled={busy || !someChecked}
+            className="flex min-h-9 items-center rounded-md bg-admin-navy px-3 text-admin-sm font-bold text-white hover:bg-admin-navyHover disabled:opacity-40"
+          >
+            タグ追加
+          </button>
+          <button
+            type="button"
+            onClick={() => run("remove")}
+            disabled={busy || !someChecked}
+            className="flex min-h-9 items-center rounded-md border border-admin-line bg-admin-surface px-3 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt disabled:opacity-40"
+          >
+            タグ削除
+          </button>
+        </div>
         {msg && (
-          <span
+          <div
             className={`text-admin-sm ${
               msg.type === "ok" ? "text-admin-success" : "text-admin-danger"
             }`}
           >
             {msg.text}
-          </span>
+          </div>
         )}
       </div>
 

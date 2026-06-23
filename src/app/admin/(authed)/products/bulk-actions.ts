@@ -71,3 +71,32 @@ export async function bulkRemoveTag(
 ): Promise<BulkResult> {
   return applyToProducts(productIds, tagName, "remove");
 }
+
+const VALID_STATUSES = ["active", "draft", "archived"] as const;
+
+/** 選択商品のステータスを一括変更（公開/下書き/非公開） */
+export async function bulkSetStatus(
+  productIds: string[],
+  status: string,
+): Promise<BulkResult> {
+  await requireAdmin();
+  if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {
+    return { ok: false, error: "ステータスの値が不正です" };
+  }
+  if (productIds.length === 0) {
+    return { ok: false, error: "商品が選択されていません" };
+  }
+
+  const supabase = createAdminClient();
+  const { error, count } = await supabase
+    .from("products")
+    .update({ status, updated_at: new Date().toISOString() }, { count: "exact" })
+    .in("id", productIds);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/catalog");
+  revalidatePath("/");
+  return { ok: true, affected: count ?? productIds.length };
+}
