@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/admin/TopBar";
-import { Card } from "@/components/admin/Card";
 import { parseTags } from "@/lib/tags";
 import { TagManager } from "./TagManager";
 
