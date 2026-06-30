@@ -3,8 +3,8 @@ export function getSiteUrl(): string {
   if (v) {
     return v.endsWith("/") ? v.slice(0, -1) : v;
   }
-  // 本番ドメイン（未設定時のフォールバック）
-  return "https://mitsuesu-music.com";
+  // 本番ドメイン（未設定時のフォールバック）。Vercel で www が主のため www に統一。
+  return "https://www.mitsuesu-music.com";
 }
 
 /** 表向きのサイト名 */
