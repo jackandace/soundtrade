@@ -19,7 +19,7 @@ export default async function PublicLayout({
       <main id="main-content" tabIndex={-1}>
         {children}
       </main>
-      <Footer categoryNav={categoryNav} />
+      <Footer />
     </CartProvider>
   );
 }

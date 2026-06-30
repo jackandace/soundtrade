@@ -1,10 +1,23 @@
 import Link from "next/link";
-import { type CategoryGroup, catalogHrefL1 } from "@/lib/categories";
+import { catalogHrefL1 } from "@/lib/categories";
 import { Container } from "./Container";
 
 type FooterItem = { label: string; href?: string };
 
-const STATIC_SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
+// フッターの「取扱カテゴリ」は取扱方針の大分類5つを固定表示し、商品一覧(大分類フィルタ)へ遷移。
+// ※ヘッダー・トップは実在庫DB連動。フッターは事業として扱う5カテゴリを提示する役割。
+const CATEGORY_GROUPS = ["管楽器", "弦楽器", "打楽器", "音響機器", "楽譜"];
+
+const CATEGORY_ITEMS: FooterItem[] = [
+  ...CATEGORY_GROUPS.map((name) => ({
+    label: name,
+    href: catalogHrefL1(name),
+  })),
+  { label: "すべてのカテゴリ", href: "/categories" },
+];
+
+const SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
+  { title: "取扱カテゴリ", items: CATEGORY_ITEMS },
   {
     title: "サービス",
     items: [
@@ -25,20 +38,7 @@ const STATIC_SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
   },
 ];
 
-export function Footer({ categoryNav }: { categoryNav: CategoryGroup[] }) {
-  // 取扱カテゴリ列は大分類（category_l1）を DB から動的生成
-  const categoryItems: FooterItem[] = [
-    ...categoryNav.map((g) => ({
-      label: g.name,
-      href: catalogHrefL1(g.name),
-    })),
-    { label: "すべてのカテゴリ", href: "/categories" },
-  ];
-  const sections = [
-    { title: "取扱カテゴリ", items: categoryItems },
-    ...STATIC_SECTIONS,
-  ];
-
+export function Footer() {
   return (
     <footer className="border-t border-line bg-beige">
       <Container className="pb-8 pt-12 md:pb-10 md:pt-16">
@@ -52,7 +52,7 @@ export function Footer({ categoryNav }: { categoryNav: CategoryGroup[] }) {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6 md:flex md:gap-12">
-            {sections.map((section) => (
+            {SECTIONS.map((section) => (
               <div key={section.title}>
                 <div className="mb-3.5 text-xs font-medium tracking-[0.08em] text-sumi">
                   {section.title}
