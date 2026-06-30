@@ -11,18 +11,10 @@ import { SITE_DEFAULT_DESCRIPTION } from "@/lib/seo";
 import { formatListPrice } from "@/lib/price";
 import { parseTags } from "@/lib/tags";
 
-// ISR: 公開商品ページを事前生成しCDNキャッシュ。10分ごと/更新時(on-demand)に再生成。
+// ISR(オンデマンド): 初回アクセス時に生成→CDNキャッシュ。10分ごと/更新時(on-demand)に再生成。
+// ※ build 時の全件事前生成(558ページ)はビルド負荷が高いため行わず、訪問時生成に切替。
 export const revalidate = 600;
-
-export async function generateStaticParams() {
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("products")
-    .select("handle")
-    .eq("status", "active")
-    .limit(2000);
-  return (data ?? []).map((p) => ({ handle: p.handle }));
-}
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
