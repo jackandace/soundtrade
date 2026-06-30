@@ -25,8 +25,8 @@ const SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
   {
     title: "会社情報",
     items: [
-      { label: "運営会社" },
-      { label: "特定商取引法" },
+      { label: "運営会社", href: "/company" },
+      { label: "特定商取引法に基づく表記", href: "/legal" },
       { label: "プライバシーポリシー" },
       { label: "お問い合わせ", href: "/contact" },
     ],
@@ -75,7 +75,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t border-line-mid pt-6 text-[11px] tracking-wider text-muted md:mt-12">
-          © 2026 SOUND·TRADE / 合同会社369. All rights reserved.
+          © 2026 SOUND·TRADE / 株式会社ミツエス. All rights reserved.
         </div>
       </Container>
     </footer>
