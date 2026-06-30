@@ -55,7 +55,7 @@ export async function sendInquiryConfirmation(
   <ul style="padding-left:18px;">${itemListHtml(summary.items)}</ul>
   ${summary.message ? `<h3 style="font-size:14px;font-weight:500;border-bottom:1px solid #E5E5E5;padding-bottom:4px;margin-top:20px;">ご要望・備考</h3><p style="white-space:pre-wrap;">${escape(summary.message)}</p>` : ""}
   <p style="margin-top:24px;font-size:12px;color:#888;">本メールは送信専用です。ご質問は本メールへの返信でお寄せください。</p>
-  <p style="font-size:12px;color:#888;">${SITE_NAME} / 合同会社369</p>
+  <p style="font-size:12px;color:#888;">${SITE_NAME} / 株式会社ミツエス</p>
 </div>`;
 
   const text = `${summary.contactName} 様
@@ -71,7 +71,7 @@ ${SITE_NAME} をご利用いただきありがとうございます。
 ${itemListText(summary.items)}
 ${summary.message ? `\nご要望・備考:\n${summary.message}\n` : ""}
 --
-${SITE_NAME} / 合同会社369`;
+${SITE_NAME} / 株式会社ミツエス`;
 
   try {
     const r = await resend.emails.send({
