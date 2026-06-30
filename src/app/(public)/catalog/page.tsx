@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createPublicClient } from "@/lib/supabase/server";
+import { getActiveProducts } from "@/lib/catalog-data";
 import { getCategoryJp, catalogHrefL1 } from "@/lib/categories";
 import { Container } from "@/components/public/Container";
 import { SearchBox } from "@/components/public/SearchBox";
@@ -63,7 +63,6 @@ export default async function CatalogPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const supabase = createPublicClient();
   const rawL1 = searchParams.l1?.trim() || "";
   const rawL2 = searchParams.l2?.trim() || "";
   const legacyJp = getCategoryJp(searchParams.category); // 旧 ?category= の後方互換
@@ -75,48 +74,34 @@ export default async function CatalogPage({
   const keyword = sanitizeQuery(rawQuery);
   const tag = sanitizeQuery(searchParams.tag?.trim() ?? "");
 
-  const SELECT =
-    "product_name, handle, maker, category_l2, category_l3, msrp_incl_tax, tags, product_images(url, is_primary, sort_order)";
+  // キャッシュ済みの全公開商品をメモリ上で絞り込み（DB往復ゼロ）
+  const all = await getActiveProducts();
+  const lc = (s: string | null | undefined) => (s ?? "").toLowerCase();
+  const tagLc = tag.toLowerCase();
+  const kwLc = keyword.toLowerCase();
 
-  // メイン商品クエリ（全フィルタ適用）
-  let query = supabase
-    .from("products")
-    .select(SELECT)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-  if (l1Filter) query = query.eq("category_l1", l1Filter);
-  if (l2Filter) query = query.eq("category_l2", l2Filter);
-  if (selectedMaker) query = query.eq("maker", selectedMaker);
-  if (tag) query = query.ilike("tags", `%${tag}%`);
-  if (keyword) {
-    const like = `%${keyword}%`;
-    query = query.or(
-      [
-        `product_name.ilike.${like}`,
-        `maker.ilike.${like}`,
-        `category_l2.ilike.${like}`,
-        `category_l3.ilike.${like}`,
-        `sku_base.ilike.${like}`,
-        `tags.ilike.${like}`,
-      ].join(","),
-    );
-  }
+  // メーカーファセットのベース: l1/l2/tag のみ適用（keyword/maker は除外＝従来挙動）
+  const facetBase = all.filter(
+    (p) =>
+      (!l1Filter || p.category_l1 === l1Filter) &&
+      (!l2Filter || p.category_l2 === l2Filter) &&
+      (!tag || lc(p.tags).includes(tagLc)),
+  );
 
-  // メーカー件数（メーカー以外の同条件で集計）
-  let makerCountQuery = supabase
-    .from("products")
-    .select("maker")
-    .eq("status", "active");
-  if (l1Filter) makerCountQuery = makerCountQuery.eq("category_l1", l1Filter);
-  if (l2Filter) makerCountQuery = makerCountQuery.eq("category_l2", l2Filter);
-  if (tag) makerCountQuery = makerCountQuery.ilike("tags", `%${tag}%`);
+  // メイン一覧: facetBase に maker + キーワード（複数フィールド横断）を追加適用
+  const matchedRows = facetBase.filter(
+    (p) =>
+      (!selectedMaker || p.maker === selectedMaker) &&
+      (!keyword ||
+        lc(p.product_name).includes(kwLc) ||
+        lc(p.maker).includes(kwLc) ||
+        lc(p.category_l2).includes(kwLc) ||
+        lc(p.category_l3).includes(kwLc) ||
+        lc(p.sku_base).includes(kwLc) ||
+        lc(p.tags).includes(kwLc)),
+  );
 
-  const [{ data: rows, error }, { data: makerRows }] = await Promise.all([
-    query,
-    makerCountQuery,
-  ]);
-
-  const products: CatalogProduct[] = (rows ?? []).map((p) => ({
+  const products: CatalogProduct[] = matchedRows.map((p) => ({
     productName: p.product_name,
     handle: p.handle,
     maker: p.maker,
@@ -128,13 +113,13 @@ export default async function CatalogPage({
   }));
 
   const makerCount = new Map<string, number>();
-  for (const r of makerRows ?? []) {
-    if (r.maker) makerCount.set(r.maker, (makerCount.get(r.maker) ?? 0) + 1);
+  for (const p of facetBase) {
+    if (p.maker) makerCount.set(p.maker, (makerCount.get(p.maker) ?? 0) + 1);
   }
   const makers = Array.from(makerCount.entries())
     .map(([maker, count]) => ({ maker, count }))
     .sort((a, b) => b.count - a.count || a.maker.localeCompare(b.maker));
-  const makerTotal = (makerRows ?? []).length;
+  const makerTotal = facetBase.length;
 
   // 検索時に保持する共通パラメータ
   const baseParams: Record<string, string> = {};
@@ -225,12 +210,7 @@ export default async function CatalogPage({
           {" "}も承ります。
         </p>
 
-        {error ? (
-          <p className="text-sm text-err">
-            商品の取得に失敗しました: {error.message}
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr] md:gap-12">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr] md:gap-12">
             <MakerFilter
               total={makerTotal}
               makers={makers}
@@ -266,7 +246,6 @@ export default async function CatalogPage({
               )}
             </div>
           </div>
-        )}
       </Container>
     </div>
   );
