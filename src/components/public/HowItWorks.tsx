@@ -1,110 +1,178 @@
 import type { ReactNode } from "react";
 import { Container } from "./Container";
 
+type Highlight = { pre: string; big: string; post: string };
 type Step = {
   num: string;
   title: string;
   desc: string;
+  note?: string;
+  highlight?: Highlight;
   icon: ReactNode;
 };
 
-// moheim 風ミニマルのライン アイコン（線幅 1.5 / 角丸 / accent 色）
+// moheim 風ミニマルのライン イラスト（線幅 1.6 / accent 色 / 44px）
 const STEPS: Step[] = [
   {
-    num: "01",
+    num: "1",
     title: "商品を探す",
-    desc: "カテゴリやメーカーから商品を検索します",
+    desc: "カテゴリ・メーカーから見積したい商品を探します。",
+    note: "一覧にない商品は「掲載外商品のお問い合わせ」からご相談いただけます。",
     icon: (
       <>
-        <circle cx="11" cy="11" r="7" />
-        <path d="M21 21l-4.3-4.3" />
+        <rect x="3" y="4" width="18" height="14" rx="2" />
+        <line x1="3" y1="8" x2="21" y2="8" />
+        <circle cx="11" cy="13" r="2.6" />
+        <path d="M13 15l2 2" />
       </>
     ),
   },
   {
-    num: "02",
-    title: "カートに追加",
-    desc: "見積もりを取りたい商品をカートに入れます",
+    num: "2",
+    title: "見積カートを確定",
+    desc: "気になる商品を見積カートに追加して確定します。",
     icon: (
       <>
-        <path d="M3 4h2l2.2 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 7H6" />
-        <circle cx="9" cy="20" r="1.3" />
-        <circle cx="18" cy="20" r="1.3" />
+        <path d="M3 4h2l2.1 10.7a1.4 1.4 0 0 0 1.4 1.1h7.7a1.4 1.4 0 0 0 1.4-1.1L19 8H6" />
+        <path d="M9.5 11l1.6 1.6 3.4-3.4" />
+        <circle cx="9.5" cy="20" r="1.3" />
+        <circle cx="17" cy="20" r="1.3" />
       </>
     ),
   },
   {
-    num: "03",
-    title: "見積依頼",
-    desc: "会社情報を入力して見積もりを依頼します",
+    num: "3",
+    title: "必要事項を入力",
+    desc: "会社情報など必要事項を入力して送信します。",
+    highlight: { pre: "約", big: "2", post: "分" },
     icon: (
       <>
         <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="M9 8h6M9 12h6M9 16h4" />
+        <path d="M9 3h6v2.4H9z" />
+        <path d="M8.5 11l1.1 1.1 2-2.1" />
+        <line x1="13" y1="10.5" x2="16" y2="10.5" />
+        <path d="M8.5 15.5l1.1 1.1 2-2.1" />
+        <line x1="13" y1="15" x2="16" y2="15" />
       </>
     ),
   },
   {
-    num: "04",
-    title: "見積回答",
-    desc: "担当者より見積書をメールでお送りします",
+    num: "4",
+    title: "担当者から返信",
+    desc: "担当者が見積書をメールでお送りします。",
+    highlight: { pre: "最短", big: "1", post: "営業日" },
     icon: (
       <>
         <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="M4 7l8 6 8-6" />
+        <path d="M4 7.5l8 5.5 8-5.5" />
       </>
     ),
   },
 ];
 
+function StepIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      width="44"
+      height="44"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-accent"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function Arrow() {
+  return (
+    <div
+      className="flex shrink-0 items-center justify-center self-center text-accent md:px-1"
+      aria-hidden="true"
+    >
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="rotate-90 md:rotate-0"
+      >
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </div>
+  );
+}
+
 export function HowItWorks() {
   return (
     <section id="flow" className="border-t border-line bg-white">
       <Container className="py-16 md:py-24">
-        <div className="mb-8 md:mb-14">
-          <div className="mb-3 font-dm text-[11px] tracking-[0.2em] text-accent">
-            HOW IT WORKS
+        <div className="mb-9 flex flex-col gap-4 md:mb-14 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="mb-3 font-dm text-[11px] tracking-[0.2em] text-accent">
+              HOW IT WORKS
+            </div>
+            <h2 className="text-2xl font-normal tracking-[-0.01em] text-sumi md:text-[30px]">
+              ご利用の流れ
+            </h2>
           </div>
-          <h2 className="text-2xl font-normal tracking-[-0.01em] text-sumi md:text-[30px]">
-            ご利用の流れ
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-4 md:gap-10">
-          {STEPS.map((step) => (
-            <div
-              key={step.num}
-              className="flex items-start gap-4 border-b border-line pb-5 md:block md:gap-0 md:border-0 md:pb-0"
+          <div className="inline-flex items-center gap-2 self-start rounded-sm bg-sumi px-4 py-2 text-[12px] tracking-wide text-white md:self-auto">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
             >
-              {/* アイコン（ベージュ地の四角に accent 色のライン） */}
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-line bg-ivory md:mb-5 md:h-14 md:w-14">
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-accent"
-                  aria-hidden="true"
-                >
-                  {step.icon}
-                </svg>
-              </div>
-              <div>
-                <div className="mb-1.5 flex items-center gap-2.5">
-                  <span className="font-dm text-[12px] tracking-[0.1em] text-accent">
-                    {step.num}
-                  </span>
-                  <span className="text-base font-medium text-sumi">
-                    {step.title}
-                  </span>
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+            会員登録不要・スピーディ
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-0">
+          {STEPS.map((step, i) => (
+            <div key={step.num} className="contents">
+              <div className="relative flex flex-1 flex-col items-center rounded-sm border border-line bg-ivory px-5 pb-7 pt-9 text-center">
+                <div className="absolute -top-3.5 left-1/2 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-sumi font-dm text-[12px] text-white">
+                  {step.num}
                 </div>
-                <div className="text-[13px] leading-loose text-sumi-light">
+                <StepIcon>{step.icon}</StepIcon>
+                <div className="mb-1.5 mt-4 text-[15px] font-medium text-sumi">
+                  {step.title}
+                </div>
+                <div className="text-[12px] leading-relaxed text-sumi-light">
                   {step.desc}
                 </div>
+                {step.note && (
+                  <div className="mt-3 rounded-sm bg-beige px-3 py-2 text-[11px] leading-relaxed text-sumi-light">
+                    {step.note}
+                  </div>
+                )}
+                {step.highlight && (
+                  <div className="mt-auto pt-4 text-accent">
+                    <span className="text-[13px]">{step.highlight.pre}</span>
+                    <span className="px-0.5 text-[26px] font-semibold leading-none">
+                      {step.highlight.big}
+                    </span>
+                    <span className="text-[13px]">{step.highlight.post}</span>
+                  </div>
+                )}
               </div>
+              {i < STEPS.length - 1 && <Arrow />}
             </div>
           ))}
         </div>
