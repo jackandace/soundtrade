@@ -54,8 +54,14 @@ export async function sendInquiryConfirmation(
   <h3 style="font-size:14px;font-weight:500;border-bottom:1px solid #E5E5E5;padding-bottom:4px;">依頼内容（${summary.items.length}商品）</h3>
   <ul style="padding-left:18px;">${itemListHtml(summary.items)}</ul>
   ${summary.message ? `<h3 style="font-size:14px;font-weight:500;border-bottom:1px solid #E5E5E5;padding-bottom:4px;margin-top:20px;">ご要望・備考</h3><p style="white-space:pre-wrap;">${escape(summary.message)}</p>` : ""}
-  <p style="margin-top:24px;font-size:12px;color:#888;">本メールは送信専用です。ご質問は本メールへの返信でお寄せください。</p>
-  <p style="font-size:12px;color:#888;">${SITE_NAME} / 株式会社ミツエス</p>
+  <p style="margin-top:24px;font-size:12px;color:#888;">本メールは送信専用です。ご質問は本メールへのご返信、または下記連絡先までお寄せください。</p>
+  <div style="margin-top:16px;border-top:1px solid #E5E5E5;padding-top:14px;font-size:12px;color:#888;line-height:1.9;">
+    <div style="color:#555;font-weight:500;">楽器卸のミツエス（株式会社ミツエス）</div>
+    <div>〒453-0801 愛知県名古屋市中村区太閤5-9-9 ミツエスビル</div>
+    <div>TEL: 052-451-1161 ／ FAX: 052-451-1164</div>
+    <div>Email: <a href="mailto:contact@mitsuesu-music.com" style="color:#888;">contact@mitsuesu-music.com</a></div>
+    <div><a href="https://www.mitsuesu-music.com" style="color:#888;">https://www.mitsuesu-music.com</a></div>
+  </div>
 </div>`;
 
   const text = `${summary.contactName} 様
@@ -70,8 +76,14 @@ ${SITE_NAME} をご利用いただきありがとうございます。
 依頼内容（${summary.items.length}商品）:
 ${itemListText(summary.items)}
 ${summary.message ? `\nご要望・備考:\n${summary.message}\n` : ""}
+本メールは送信専用です。ご質問は本メールへのご返信、または下記連絡先までお寄せください。
+
 --
-${SITE_NAME} / 株式会社ミツエス`;
+楽器卸のミツエス（株式会社ミツエス）
+〒453-0801 愛知県名古屋市中村区太閤5-9-9 ミツエスビル
+TEL: 052-451-1161 / FAX: 052-451-1164
+Email: contact@mitsuesu-music.com
+https://www.mitsuesu-music.com`;
 
   try {
     const r = await resend.emails.send({
