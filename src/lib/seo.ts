@@ -4,7 +4,7 @@ export function getSiteUrl(): string {
     return v.endsWith("/") ? v.slice(0, -1) : v;
   }
   // 本番ドメイン（未設定時のフォールバック）
-  return "https://mitsuesu-music.jp";
+  return "https://mitsuesu-music.com";
 }
 
 /** 表向きのサイト名 */
