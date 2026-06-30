@@ -27,7 +27,7 @@ const SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
     items: [
       { label: "運営会社", href: "/company" },
       { label: "特定商取引法に基づく表記", href: "/legal" },
-      { label: "プライバシーポリシー" },
+      { label: "プライバシーポリシー", href: "/privacy" },
       { label: "お問い合わせ", href: "/contact" },
     ],
   },

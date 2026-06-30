@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP, DM_Sans } from "next/font/google";
-import { getSiteUrl, SITE_NAME, SITE_DEFAULT_DESCRIPTION } from "@/lib/seo";
+import {
+  getSiteUrl,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_DEFAULT_DESCRIPTION,
+  SITE_OG_DESCRIPTION,
+  SITE_KEYWORDS,
+} from "@/lib/seo";
 import { OrganizationJsonLd } from "@/components/json-ld/Organization";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import "./globals.css";
@@ -24,22 +31,23 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${SITE_NAME} — 楽器卸のための B2B プラットフォーム`,
+    default: SITE_TITLE,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DEFAULT_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
   openGraph: {
     type: "website",
     locale: "ja_JP",
     url: siteUrl,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — 楽器卸のための B2B プラットフォーム`,
-    description: SITE_DEFAULT_DESCRIPTION,
+    title: SITE_TITLE,
+    description: SITE_OG_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — 楽器卸のための B2B プラットフォーム`,
-    description: SITE_DEFAULT_DESCRIPTION,
+    title: SITE_TITLE,
+    description: SITE_OG_DESCRIPTION,
   },
 };
 

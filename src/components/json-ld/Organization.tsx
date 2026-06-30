@@ -8,7 +8,17 @@ export function OrganizationJsonLd() {
     name: SITE_NAME,
     url,
     description: SITE_DEFAULT_DESCRIPTION,
-    legalName: "合同会社369",
+    legalName: "株式会社ミツエス",
+    telephone: "052-451-1161",
+    email: "satot@mitsuesu.ne.jp",
+    address: {
+      "@type": "PostalAddress",
+      postalCode: "453-0801",
+      addressRegion: "愛知県",
+      addressLocality: "名古屋市中村区",
+      streetAddress: "太閤5-9-9",
+      addressCountry: "JP",
+    },
   };
   return (
     <script
