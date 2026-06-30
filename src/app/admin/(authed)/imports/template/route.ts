@@ -26,7 +26,7 @@ export async function GET() {
   if (!admin) return new NextResponse("Unauthorized", { status: 401 });
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = "SOUND·TRADE";
+  wb.creator = "楽器卸のミツエス";
 
   // シート1: 商品データ（記入用）
   const ws = wb.addWorksheet("商品データ");

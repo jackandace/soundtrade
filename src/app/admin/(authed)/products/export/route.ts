@@ -59,7 +59,7 @@ export async function GET(req: Request) {
   if (error) return new NextResponse(`Error: ${error.message}`, { status: 500 });
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = "SOUND·TRADE";
+  wb.creator = "楽器卸のミツエス";
   const ws = wb.addWorksheet("商品データ");
   ws.addRow(HEADERS);
   const headerRow = ws.getRow(1);

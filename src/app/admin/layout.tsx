@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "SOUND·TRADE 管理画面",
+  title: "楽器卸のミツエス 管理画面",
   robots: "noindex,nofollow",
 };
 

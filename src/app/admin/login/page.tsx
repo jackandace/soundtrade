@@ -17,8 +17,8 @@ function LoginShell({ children }: { children?: React.ReactNode }) {
     <div className="flex min-h-screen items-center justify-center bg-admin-bg px-5 py-12">
       <div className="w-full max-w-[420px] rounded-lg border border-admin-line bg-admin-surface p-8 md:p-10">
         <div className="mb-8 text-center">
-          <div className="font-dm text-xl font-bold tracking-[0.12em] text-admin-ink">
-            SOUND·TRADE
+          <div className="text-xl font-bold tracking-[0.04em] text-admin-ink">
+            楽器卸のミツエス
           </div>
           <div className="mt-1 text-admin-xs text-admin-inkMute">管理画面</div>
         </div>

@@ -95,8 +95,8 @@ export function Sidebar({ displayName, role }: Props) {
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-admin-navy">
       <div className="border-b border-white/10 px-5 py-6">
-        <div className="text-[19px] font-bold tracking-[0.06em] text-white">
-          SOUND·TRADE
+        <div className="text-[19px] font-bold tracking-[0.04em] text-white">
+          楽器卸のミツエス
         </div>
         <div className="mt-1 text-admin-xs text-white/50">管理画面</div>
       </div>

@@ -1,6 +1,6 @@
 import { getResend, getFromAddress, type SendResult } from "./client";
 
-const SITE_NAME = "SOUND·TRADE";
+const SITE_NAME = "楽器卸のミツエス";
 
 export type ImportSummary = {
   jobId: string;

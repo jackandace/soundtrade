@@ -21,11 +21,11 @@ export function Header() {
       <Container>
         <div className="flex h-16 items-center gap-4 md:h-20 md:gap-6">
           <Link href="/" onClick={closeAll} className="block shrink-0">
-            <div className="font-dm text-lg font-medium tracking-[0.12em] text-sumi md:text-[22px]">
-              SOUND·TRADE
+            <div className="text-lg font-medium tracking-[0.08em] text-sumi md:text-[22px]">
+              楽器卸のミツエス
             </div>
-            <div className="mt-0.5 hidden text-[9px] tracking-[0.3em] text-muted md:block">
-              WHOLESALE INSTRUMENTS
+            <div className="mt-0.5 hidden font-dm text-[9px] tracking-[0.3em] text-muted md:block">
+              MITSUESU MUSIC
             </div>
           </Link>
 

@@ -3,7 +3,7 @@ import { Container } from "@/components/public/Container";
 
 export const metadata: Metadata = {
   title: "運営会社",
-  description: "SOUND·TRADE を運営する会社の概要。",
+  description: "楽器卸のミツエスを運営する会社の概要。",
 };
 
 const ROWS: Array<[string, React.ReactNode]> = [

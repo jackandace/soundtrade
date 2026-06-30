@@ -39,11 +39,11 @@ export function Footer() {
       <Container className="pb-8 pt-12 md:pb-10 md:pt-16">
         <div className="flex flex-wrap justify-between gap-8 md:gap-12">
           <div className="max-w-full md:max-w-[280px]">
-            <div className="mb-3 font-dm text-lg font-medium tracking-[0.12em] text-sumi">
-              SOUND·TRADE
+            <div className="mb-3 text-lg font-medium tracking-[0.08em] text-sumi">
+              楽器卸のミツエス
             </div>
             <p className="text-[13px] leading-loose text-sumi-light">
-              楽器卸取引のための業務用プラットフォーム。確かな品質の楽器を、確かな価格で。
+              名古屋の楽器卸会社ミツエス。楽器・楽譜・音響機器の仕入れを、小売店・法人のお客様へ。
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6 md:flex md:gap-12">
@@ -75,7 +75,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t border-line-mid pt-6 text-[11px] tracking-wider text-muted md:mt-12">
-          © 2026 SOUND·TRADE / 株式会社ミツエス. All rights reserved.
+          © 2026 株式会社ミツエス. All rights reserved.
         </div>
       </Container>
     </footer>

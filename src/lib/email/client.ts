@@ -17,7 +17,7 @@ export function getFromAddress(): string {
   const v = process.env.RESEND_FROM_EMAIL?.trim();
   if (v) return v;
   // Resend のサンドボックス送信元（自分のアカウントメール宛にしか届かない）
-  return "SOUND·TRADE <onboarding@resend.dev>";
+  return "楽器卸のミツエス <onboarding@resend.dev>";
 }
 
 export async function getAdminEmails(
