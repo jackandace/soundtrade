@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { getCategoryJp, catalogHrefL1 } from "@/lib/categories";
 import { Container } from "@/components/public/Container";
 import { SearchBox } from "@/components/public/SearchBox";
@@ -9,7 +9,8 @@ import { CatalogView, type CatalogProduct } from "@/components/public/CatalogVie
 import { pickPrimaryImage } from "@/lib/product-images";
 import { parseTags } from "@/lib/tags";
 
-export const dynamic = "force-dynamic";
+// searchParams に依存するため動的レンダリング（force-dynamic 指定は不要）。
+// レイアウトの getCategoryNav はキャッシュ済み。
 
 type SearchParams = {
   l1?: string; // 大分類 (category_l1)
@@ -62,7 +63,7 @@ export default async function CatalogPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const rawL1 = searchParams.l1?.trim() || "";
   const rawL2 = searchParams.l2?.trim() || "";
   const legacyJp = getCategoryJp(searchParams.category); // 旧 ?category= の後方互換

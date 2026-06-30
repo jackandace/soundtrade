@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublic } from "@/lib/revalidate-public";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { parseTags, joinTags } from "@/lib/tags";
@@ -57,6 +58,6 @@ export async function updateProduct(
 
   revalidatePath(`/admin/products/${args.id}`);
   revalidatePath("/admin/products");
-  revalidatePath("/catalog");
+  revalidatePublic();
   return { ok: true };
 }

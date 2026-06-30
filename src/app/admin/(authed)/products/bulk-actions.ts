@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublic } from "@/lib/revalidate-public";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { parseTags, joinTags } from "@/lib/tags";
@@ -53,8 +54,7 @@ async function applyToProducts(
 
   revalidatePath("/admin/products");
   revalidatePath("/admin/tags");
-  revalidatePath("/catalog");
-  revalidatePath("/");
+  revalidatePublic();
   return { ok: true, affected };
 }
 
@@ -96,7 +96,6 @@ export async function bulkSetStatus(
 
   revalidatePath("/admin/products");
   revalidatePath("/admin/dashboard");
-  revalidatePath("/catalog");
-  revalidatePath("/");
+  revalidatePublic();
   return { ok: true, affected: count ?? productIds.length };
 }

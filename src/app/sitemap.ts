@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { catalogHrefL1, catalogHrefL2 } from "@/lib/categories";
 import { getCategoryNav } from "@/lib/categories-server";
 import { getSiteUrl } from "@/lib/seo";
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/legal`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   // カテゴリURL（DB連動：大分類 + 中分類）
   const nav = await getCategoryNav();

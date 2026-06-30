@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublic } from "@/lib/revalidate-public";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { applyImport, type ApplyResult } from "@/lib/csv/apply";
@@ -77,8 +78,7 @@ export async function approveAndApply(
   revalidatePath("/admin/imports");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/products");
-  revalidatePath("/catalog");
-  revalidatePath("/");
+  revalidatePublic();
 
   return result;
 }

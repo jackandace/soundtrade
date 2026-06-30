@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { Container } from "@/components/public/Container";
 import { ImagePlaceholder } from "@/components/public/ImagePlaceholder";
 import { AddToCartForm } from "@/components/public/AddToCartForm";
@@ -11,14 +11,25 @@ import { SITE_DEFAULT_DESCRIPTION } from "@/lib/seo";
 import { formatListPrice } from "@/lib/price";
 import { parseTags } from "@/lib/tags";
 
-export const dynamic = "force-dynamic";
+// ISR: 公開商品ページを事前生成しCDNキャッシュ。10分ごと/更新時(on-demand)に再生成。
+export const revalidate = 600;
+
+export async function generateStaticParams() {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("products")
+    .select("handle")
+    .eq("status", "active")
+    .limit(2000);
+  return (data ?? []).map((p) => ({ handle: p.handle }));
+}
 
 export async function generateMetadata({
   params,
 }: {
   params: { handle: string };
 }): Promise<Metadata> {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { data: product } = await supabase
     .from("products")
     .select("product_name, category_l2, category_l3, description_short, maker")
@@ -54,7 +65,7 @@ export default async function ProductDetailPage({
 }: {
   params: { handle: string };
 }) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   const { data: product, error } = await supabase
     .from("products")

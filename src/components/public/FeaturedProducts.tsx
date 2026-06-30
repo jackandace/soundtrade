@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { pickPrimaryImage } from "@/lib/product-images";
 import { Container } from "./Container";
 import { ProductCard } from "./ProductCard";
 
 export async function FeaturedProducts() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select(

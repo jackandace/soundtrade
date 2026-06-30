@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublic } from "@/lib/revalidate-public";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -26,8 +27,7 @@ async function revalidateProductPaths(
   revalidatePath(`/admin/products/${productId}`);
   revalidatePath("/admin/images");
   if (handle) revalidatePath(`/products/${handle}`);
-  revalidatePath("/catalog");
-  revalidatePath("/");
+  revalidatePublic();
 }
 
 export async function uploadProductImages(

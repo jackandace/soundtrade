@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidatePublic } from "@/lib/revalidate-public";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -92,8 +93,7 @@ export async function rollbackToSnapshot(
   });
 
   // 公開サイト + 管理画面のキャッシュを破棄
-  revalidatePath("/");
-  revalidatePath("/catalog");
+  revalidatePublic();
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/products");
   revalidatePath("/admin/snapshots");

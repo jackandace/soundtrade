@@ -4,14 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { parseTags, joinTags } from "@/lib/tags";
+import { revalidatePublic } from "@/lib/revalidate-public";
 
 export type SimpleResult = { ok: true } | { ok: false; error: string };
 
 function revalidateAll() {
   revalidatePath("/admin/tags");
   revalidatePath("/admin/products");
-  revalidatePath("/catalog");
-  revalidatePath("/");
+  revalidatePublic();
 }
 
 /** タグを語彙として登録（tag_master へ追加） */

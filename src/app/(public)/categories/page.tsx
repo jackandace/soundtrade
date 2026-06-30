@@ -4,7 +4,8 @@ import { catalogHrefL1, catalogHrefL2 } from "@/lib/categories";
 import { getCategoryNav } from "@/lib/categories-server";
 import { Container } from "@/components/public/Container";
 
-export const dynamic = "force-dynamic";
+// ISR: CDN キャッシュ + 10分ごとに再生成（更新時は on-demand 再検証で即時反映）
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "取扱カテゴリ一覧",
