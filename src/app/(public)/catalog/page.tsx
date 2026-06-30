@@ -6,11 +6,14 @@ import { Container } from "@/components/public/Container";
 import { SearchBox } from "@/components/public/SearchBox";
 import { MakerFilter } from "@/components/public/MakerFilter";
 import { CatalogView, type CatalogProduct } from "@/components/public/CatalogView";
+import { Pagination } from "@/components/public/Pagination";
 import { pickPrimaryImage } from "@/lib/product-images";
 import { parseTags } from "@/lib/tags";
 
 // searchParams に依存するため動的レンダリング（force-dynamic 指定は不要）。
 // レイアウトの getCategoryNav はキャッシュ済み。
+
+const PAGE_SIZE = 36;
 
 type SearchParams = {
   l1?: string; // 大分類 (category_l1)
@@ -19,6 +22,7 @@ type SearchParams = {
   maker?: string;
   q?: string;
   tag?: string;
+  page?: string;
 };
 
 export function generateMetadata({
@@ -42,11 +46,17 @@ export function generateMetadata({
       robots: { index: false, follow: true },
     };
   }
+  const pageNo = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1);
   const label = maker ?? catLabel ?? null;
-  const title = label ? `${label}の商品一覧` : "商品カタログ";
+  const baseTitle = label ? `${label}の商品一覧` : "商品カタログ";
+  const title = pageNo > 1 ? `${baseTitle}（${pageNo}ページ目）` : baseTitle;
   const description = label
     ? `${label}の取扱商品一覧。管楽器・弦楽器・打楽器の卸プラットフォーム。`
     : "管楽器・弦楽器・打楽器の卸取扱商品一覧。法人・個人事業主のお客様向け。";
+  // 2ページ目以降は重複防止で noindex（follow は維持）
+  if (pageNo > 1) {
+    return { title, description, robots: { index: false, follow: true } };
+  }
   return {
     title,
     description,
@@ -101,7 +111,20 @@ export default async function CatalogPage({
         lc(p.tags).includes(kwLc)),
   );
 
-  const products: CatalogProduct[] = matchedRows.map((p) => ({
+  // ページネーション（1ページ PAGE_SIZE 件・該当ページのみ描画して描画コストを削減）
+  const totalCount = matchedRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const requestedPage = Math.max(
+    1,
+    Number.parseInt(searchParams.page ?? "1", 10) || 1,
+  );
+  const currentPage = Math.min(requestedPage, totalPages);
+  const pageRows = matchedRows.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  const products: CatalogProduct[] = pageRows.map((p) => ({
     productName: p.product_name,
     handle: p.handle,
     maker: p.maker,
@@ -129,7 +152,11 @@ export default async function CatalogPage({
   if (keyword) baseParams.q = rawQuery;
   if (tag) baseParams.tag = tag;
 
-  const resultCount = products.length;
+  // ページ送りリンク用（メーカー絞り込みも引き継ぐ）
+  const pageParams: Record<string, string> = { ...baseParams };
+  if (selectedMaker) pageParams.maker = selectedMaker;
+
+  const resultCount = totalCount;
   const heading =
     keyword || tag
       ? `「${rawQuery || tag}」の検索結果`
@@ -242,7 +269,14 @@ export default async function CatalogPage({
                   </Link>
                 </div>
               ) : (
-                <CatalogView products={products} />
+                <>
+                  <CatalogView products={products} />
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    baseParams={pageParams}
+                  />
+                </>
               )}
             </div>
           </div>
