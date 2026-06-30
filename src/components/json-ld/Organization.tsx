@@ -10,13 +10,13 @@ export function OrganizationJsonLd() {
     description: SITE_DEFAULT_DESCRIPTION,
     legalName: "株式会社ミツエス",
     telephone: "052-451-1161",
-    email: "satot@mitsuesu.ne.jp",
+    email: "contact@mitsuesu-music.com",
     address: {
       "@type": "PostalAddress",
       postalCode: "453-0801",
       addressRegion: "愛知県",
       addressLocality: "名古屋市中村区",
-      streetAddress: "太閤5-9-9",
+      streetAddress: "太閤5-9-9 ミツエスビル",
       addressCountry: "JP",
     },
   };

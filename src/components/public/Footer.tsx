@@ -1,24 +1,16 @@
 import Link from "next/link";
+import { type CategoryGroup, catalogHrefL1 } from "@/lib/categories";
 import { Container } from "./Container";
 
 type FooterItem = { label: string; href?: string };
 
-const SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
-  {
-    title: "取扱カテゴリ",
-    items: [
-      { label: "クラリネット", href: "/catalog?category=clarinet" },
-      { label: "サクソフォン", href: "/catalog?category=saxophone" },
-      { label: "トランペット", href: "/catalog?category=trumpet" },
-      { label: "フルート", href: "/catalog?category=flute" },
-    ],
-  },
+const STATIC_SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
   {
     title: "サービス",
     items: [
       { label: "カタログを見る", href: "/catalog" },
       { label: "ご利用の流れ", href: "/#flow" },
-      { label: "取扱メーカー", href: "/#makers" },
+      { label: "取扱メーカー", href: "/catalog" },
       { label: "掲載外商品のお問い合わせ", href: "/contact" },
     ],
   },
@@ -33,7 +25,20 @@ const SECTIONS: Array<{ title: string; items: FooterItem[] }> = [
   },
 ];
 
-export function Footer() {
+export function Footer({ categoryNav }: { categoryNav: CategoryGroup[] }) {
+  // 取扱カテゴリ列は大分類（category_l1）を DB から動的生成
+  const categoryItems: FooterItem[] = [
+    ...categoryNav.map((g) => ({
+      label: g.name,
+      href: catalogHrefL1(g.name),
+    })),
+    { label: "すべてのカテゴリ", href: "/categories" },
+  ];
+  const sections = [
+    { title: "取扱カテゴリ", items: categoryItems },
+    ...STATIC_SECTIONS,
+  ];
+
   return (
     <footer className="border-t border-line bg-beige">
       <Container className="pb-8 pt-12 md:pb-10 md:pt-16">
@@ -47,7 +52,7 @@ export function Footer() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6 md:flex md:gap-12">
-            {SECTIONS.map((section) => (
+            {sections.map((section) => (
               <div key={section.title}>
                 <div className="mb-3.5 text-xs font-medium tracking-[0.08em] text-sumi">
                   {section.title}

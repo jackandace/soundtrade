@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/public/Container";
 
 export const metadata: Metadata = {
@@ -13,9 +14,9 @@ const SECTIONS: Array<{ title: string; body: React.ReactNode }> = [
       <>
         株式会社ミツエス
         <br />
-        〒453-0801 愛知県名古屋市中村区太閤5-9-9
+        〒453-0801 愛知県名古屋市中村区太閤5-9-9 ミツエスビル
         <br />
-        TEL: 052-451-1161 / メール: satot@mitsuesu.ne.jp
+        TEL: 052-451-1161 / メール: contact@mitsuesu-music.com
       </>
     ),
   },
@@ -41,7 +42,7 @@ const SECTIONS: Array<{ title: string; body: React.ReactNode }> = [
   },
   {
     title: "7. お問い合わせ窓口",
-    body: "個人情報の取り扱いに関するお問い合わせは、satot@mitsuesu.ne.jp までご連絡ください。",
+    body: "個人情報の取り扱いに関するお問い合わせは、contact@mitsuesu-music.com までご連絡ください。",
   },
   {
     title: "8. 本ポリシーの変更",
@@ -54,7 +55,10 @@ export default function PrivacyPage() {
     <div className="min-h-[70vh] bg-ivory">
       <Container className="pb-16 pt-8 md:pb-24 md:pt-16">
         <div className="mb-5 text-xs tracking-wider text-muted md:mb-8">
-          ホーム ／ プライバシーポリシー
+          <Link href="/" className="transition-colors hover:text-sumi hover:underline">
+            ホーム
+          </Link>
+          {" ／ プライバシーポリシー"}
         </div>
         <h1 className="mb-2 text-[26px] font-light tracking-[-0.01em] text-sumi md:text-[34px]">
           プライバシーポリシー

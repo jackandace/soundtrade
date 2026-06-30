@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORIES } from "@/lib/categories";
+import { catalogHrefL1, catalogHrefL2 } from "@/lib/categories";
+import { getCategoryNav } from "@/lib/categories-server";
 import { getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -12,20 +13,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixed: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
     { url: `${base}/catalog`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${base}/categories`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/company`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/legal`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  const categoryEntries: MetadataRoute.Sitemap = CATEGORIES.map((c) => ({
-    url: `${base}/catalog?category=${c.id}`,
-    lastModified: now,
-    changeFrequency: "daily",
-    priority: 0.8,
-  }));
-
   const supabase = createClient();
+
+  // カテゴリURL（DB連動：大分類 + 中分類）
+  const nav = await getCategoryNav();
+  const categoryEntries: MetadataRoute.Sitemap = [
+    ...nav.map((g) => ({
+      url: `${base}${catalogHrefL1(g.name)}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    })),
+    ...nav.flatMap((g) =>
+      g.children.map((c) => ({
+        url: `${base}${catalogHrefL2(c.name)}`,
+        lastModified: now,
+        changeFrequency: "daily" as const,
+        priority: 0.7,
+      })),
+    ),
+  ];
   const { data: products } = await supabase
     .from("products")
     .select("handle, updated_at")

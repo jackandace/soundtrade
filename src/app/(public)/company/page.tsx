@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/public/Container";
 
 export const metadata: Metadata = {
@@ -8,21 +9,25 @@ export const metadata: Metadata = {
 
 const ROWS: Array<[string, React.ReactNode]> = [
   ["社名", "株式会社ミツエス"],
-  ["代表者", "佐藤 しげ子"],
+  ["代表者", "新井 貴雄"],
   [
     "本社所在地",
     <>
       〒453-0801
       <br />
-      愛知県名古屋市中村区太閤5-9-9
+      愛知県名古屋市中村区太閤5-9-9 ミツエスビル
+      <br />
+      <span className="text-[12px] text-muted">
+        ※商品の直接受け渡しは行っておりませんので、ご了承ください。
+      </span>
     </>,
   ],
   ["電話番号", "052-451-1161"],
   ["FAX", "052-451-1164"],
-  ["メール", "satot@mitsuesu.ne.jp"],
+  ["メール", "contact@mitsuesu-music.com"],
   ["資本金", "1,000万円"],
   ["設立", "1954年"],
-  ["事業内容", "楽器・楽譜の卸売"],
+  ["事業内容", "楽器、楽譜、音響機器の卸売"],
   ["取引銀行", "北陸銀行 / 三菱UFJ銀行 / 名古屋銀行 / 愛知銀行"],
 ];
 
@@ -37,7 +42,10 @@ export default function CompanyPage() {
     <div className="min-h-[70vh] bg-ivory">
       <Container className="pb-16 pt-8 md:pb-24 md:pt-16">
         <div className="mb-5 text-xs tracking-wider text-muted md:mb-8">
-          ホーム ／ 運営会社
+          <Link href="/" className="transition-colors hover:text-sumi hover:underline">
+            ホーム
+          </Link>
+          {" ／ 運営会社"}
         </div>
         <h1 className="mb-2 text-[26px] font-light tracking-[-0.01em] text-sumi md:text-[34px]">
           運営会社

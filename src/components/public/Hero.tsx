@@ -7,16 +7,13 @@ export function Hero() {
     <section className="bg-ivory">
       <Container className="grid grid-cols-1 items-center gap-9 py-11 md:grid-cols-[1.05fr_0.95fr] md:gap-[72px] md:py-24">
         <div className="order-2 md:order-1">
-          <div className="mb-5 font-dm text-[11px] tracking-[0.2em] text-accent">
-            楽器卸のミツエス
-          </div>
           <h1 className="mb-6 text-[26px] font-light leading-[1.5] tracking-[-0.02em] text-sumi md:text-[40px]">
             楽器・楽譜・音響機器の
             <br />
             仕入れならミツエス
           </h1>
           <p className="mb-8 max-w-[480px] text-sm leading-loose text-sumi-light md:text-[15px]">
-            管楽器・弦楽器・打楽器——主要メーカーの楽器をまとめて取り扱う卸プラットフォーム。
+            管楽器・弦楽器・打楽器——主要メーカーの楽器や関連アイテムをまとめて取り扱う卸プラットフォーム。
             楽器店、レンタル事業者、各種小売店、オフィスなどの法人様や楽器の講師等をされている個人事業主様に、確かな品質と価格でお応えします。
           </p>
           <div className="flex flex-wrap gap-3">

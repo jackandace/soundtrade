@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getCategoryJp } from "@/lib/categories";
+import { getCategoryJp, catalogHrefL1 } from "@/lib/categories";
 import { Container } from "@/components/public/Container";
 import { SearchBox } from "@/components/public/SearchBox";
 import { MakerFilter } from "@/components/public/MakerFilter";
@@ -12,7 +12,9 @@ import { parseTags } from "@/lib/tags";
 export const dynamic = "force-dynamic";
 
 type SearchParams = {
-  category?: string;
+  l1?: string; // 大分類 (category_l1)
+  l2?: string; // 中分類 (category_l2)
+  category?: string; // 旧英字ID（後方互換）
   maker?: string;
   q?: string;
   tag?: string;
@@ -23,7 +25,11 @@ export function generateMetadata({
 }: {
   searchParams: SearchParams;
 }): Metadata {
-  const jp = getCategoryJp(searchParams.category);
+  const catLabel =
+    searchParams.l2?.trim() ||
+    searchParams.l1?.trim() ||
+    getCategoryJp(searchParams.category) ||
+    null;
   const q = searchParams.q?.trim();
   const tag = searchParams.tag?.trim();
   const maker = searchParams.maker?.trim();
@@ -35,7 +41,7 @@ export function generateMetadata({
       robots: { index: false, follow: true },
     };
   }
-  const label = maker ?? jp ?? null;
+  const label = maker ?? catLabel ?? null;
   const title = label ? `${label}の商品一覧` : "商品カタログ";
   const description = label
     ? `${label}の取扱商品一覧。管楽器・弦楽器・打楽器の卸プラットフォーム。`
@@ -57,8 +63,12 @@ export default async function CatalogPage({
   searchParams: SearchParams;
 }) {
   const supabase = createClient();
-  const categoryId = searchParams.category ?? null;
-  const categoryJp = getCategoryJp(categoryId);
+  const rawL1 = searchParams.l1?.trim() || "";
+  const rawL2 = searchParams.l2?.trim() || "";
+  const legacyJp = getCategoryJp(searchParams.category); // 旧 ?category= の後方互換
+  const l1Filter = rawL1 || null;
+  const l2Filter = rawL2 || legacyJp || null;
+  const categoryLabel = l2Filter || l1Filter || null;
   const selectedMaker = searchParams.maker?.trim() || null;
   const rawQuery = searchParams.q?.trim() ?? "";
   const keyword = sanitizeQuery(rawQuery);
@@ -73,7 +83,8 @@ export default async function CatalogPage({
     .select(SELECT)
     .eq("status", "active")
     .order("created_at", { ascending: false });
-  if (categoryJp) query = query.eq("category_l2", categoryJp);
+  if (l1Filter) query = query.eq("category_l1", l1Filter);
+  if (l2Filter) query = query.eq("category_l2", l2Filter);
   if (selectedMaker) query = query.eq("maker", selectedMaker);
   if (tag) query = query.ilike("tags", `%${tag}%`);
   if (keyword) {
@@ -95,7 +106,8 @@ export default async function CatalogPage({
     .from("products")
     .select("maker")
     .eq("status", "active");
-  if (categoryJp) makerCountQuery = makerCountQuery.eq("category_l2", categoryJp);
+  if (l1Filter) makerCountQuery = makerCountQuery.eq("category_l1", l1Filter);
+  if (l2Filter) makerCountQuery = makerCountQuery.eq("category_l2", l2Filter);
   if (tag) makerCountQuery = makerCountQuery.ilike("tags", `%${tag}%`);
 
   const [{ data: rows, error }, { data: makerRows }] = await Promise.all([
@@ -125,7 +137,9 @@ export default async function CatalogPage({
 
   // 検索時に保持する共通パラメータ
   const baseParams: Record<string, string> = {};
-  if (categoryId) baseParams.category = categoryId;
+  if (rawL1) baseParams.l1 = rawL1;
+  if (rawL2) baseParams.l2 = rawL2;
+  else if (searchParams.category) baseParams.category = searchParams.category;
   if (keyword) baseParams.q = rawQuery;
   if (tag) baseParams.tag = tag;
 
@@ -133,17 +147,49 @@ export default async function CatalogPage({
   const heading =
     keyword || tag
       ? `「${rawQuery || tag}」の検索結果`
-      : (selectedMaker ?? categoryJp ?? "商品カタログ");
+      : (selectedMaker ?? categoryLabel ?? "商品カタログ");
 
-  const hasFilter = Boolean(keyword || tag || selectedMaker || categoryJp);
+  const hasFilter = Boolean(keyword || tag || selectedMaker || categoryLabel);
 
   return (
     <div className="min-h-[70vh] bg-ivory">
       <Container className="pb-16 pt-8 md:pb-24 md:pt-16">
-        <div className="mb-5 text-xs tracking-wider text-muted md:mb-8">
-          ホーム ／ カタログ
-          {categoryJp ? ` ／ ${categoryJp}` : ""}
-        </div>
+        <nav
+          aria-label="パンくず"
+          className="mb-5 text-xs tracking-wider text-muted md:mb-8"
+        >
+          <Link href="/" className="transition-colors hover:text-sumi hover:underline">
+            ホーム
+          </Link>
+          {" ／ "}
+          <Link
+            href="/catalog"
+            className="transition-colors hover:text-sumi hover:underline"
+          >
+            カタログ
+          </Link>
+          {l1Filter && (
+            <>
+              {" ／ "}
+              {l2Filter ? (
+                <Link
+                  href={catalogHrefL1(l1Filter)}
+                  className="transition-colors hover:text-sumi hover:underline"
+                >
+                  {l1Filter}
+                </Link>
+              ) : (
+                <span className="text-sumi">{l1Filter}</span>
+              )}
+            </>
+          )}
+          {l2Filter && (
+            <>
+              {" ／ "}
+              <span className="text-sumi">{l2Filter}</span>
+            </>
+          )}
+        </nav>
         <h1 className="mb-2 text-[26px] font-light tracking-[-0.01em] text-sumi md:text-[34px]">
           {heading}
         </h1>

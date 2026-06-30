@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-context";
-import { CATEGORIES } from "@/lib/categories";
+import {
+  type CategoryGroup,
+  catalogHrefL1,
+  catalogHrefL2,
+} from "@/lib/categories";
 import { Container } from "./Container";
 
-export function Header() {
+export function Header({ categoryNav }: { categoryNav: CategoryGroup[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const { totalQty, isMounted } = useCart();
@@ -15,6 +19,8 @@ export function Header() {
     setMenuOpen(false);
     setCatOpen(false);
   };
+
+  const flatCats = categoryNav.flatMap((g) => g.children);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-ivory">
@@ -92,36 +98,71 @@ export function Header() {
               </span>
             </Link>
 
-            {/* カテゴリ・ドロップダウン */}
+            {/* カテゴリ・ドロップダウン（大分類→中分類・DB連動） */}
             {catOpen && (
               <>
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setCatOpen(false)}
                 />
-                <div className="absolute left-0 top-[calc(100%+8px)] z-50 w-[520px] border border-line bg-white p-2 shadow-sm">
-                  <div className="grid grid-cols-2 gap-1">
-                    {CATEGORIES.map((c) => (
-                      <Link
-                        key={c.id}
-                        href={`/catalog?category=${c.id}`}
-                        onClick={() => setCatOpen(false)}
-                        className="flex items-center justify-between px-3 py-2.5 text-sm text-sumi transition-colors hover:bg-beige"
-                      >
-                        <span>{c.jp}</span>
-                        <span className="font-dm text-[10px] tracking-wider text-muted">
-                          {c.en.toUpperCase()}
-                        </span>
-                      </Link>
-                    ))}
+                <div className="absolute left-0 top-[calc(100%+8px)] z-50 max-h-[70vh] w-[560px] overflow-auto border border-line bg-white p-4 shadow-sm">
+                  {categoryNav.length === 0 ? (
+                    <Link
+                      href="/catalog"
+                      onClick={() => setCatOpen(false)}
+                      className="block px-3 py-2.5 text-sm text-sumi hover:bg-beige"
+                    >
+                      すべての商品を見る →
+                    </Link>
+                  ) : (
+                    <div className="space-y-4">
+                      {categoryNav.map((g) => (
+                        <div key={g.name}>
+                          <Link
+                            href={catalogHrefL1(g.name)}
+                            onClick={() => setCatOpen(false)}
+                            className="mb-1.5 flex items-center gap-2 text-[13px] font-medium text-sumi transition-colors hover:text-accent"
+                          >
+                            {g.name}
+                            <span className="font-dm text-[10px] text-muted">
+                              {g.count}
+                            </span>
+                          </Link>
+                          <div className="grid grid-cols-2 gap-0.5">
+                            {g.children.map((c) => (
+                              <Link
+                                key={c.name}
+                                href={catalogHrefL2(c.name)}
+                                onClick={() => setCatOpen(false)}
+                                className="flex items-center justify-between px-3 py-2 text-sm text-sumi-light transition-colors hover:bg-beige hover:text-sumi"
+                              >
+                                <span>{c.name}</span>
+                                <span className="font-dm text-[10px] tracking-wider text-muted">
+                                  {c.count}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 flex gap-5 border-t border-line pt-3">
+                    <Link
+                      href="/categories"
+                      onClick={() => setCatOpen(false)}
+                      className="text-sm text-accent hover:text-sumi"
+                    >
+                      すべてのカテゴリ →
+                    </Link>
+                    <Link
+                      href="/catalog"
+                      onClick={() => setCatOpen(false)}
+                      className="text-sm text-accent hover:text-sumi"
+                    >
+                      すべての商品 →
+                    </Link>
                   </div>
-                  <Link
-                    href="/catalog"
-                    onClick={() => setCatOpen(false)}
-                    className="mt-1 block border-t border-line px-3 py-2.5 text-sm text-accent hover:text-sumi"
-                  >
-                    すべての商品を見る →
-                  </Link>
                 </div>
               </>
             )}
@@ -200,18 +241,24 @@ export function Header() {
           <div className="px-5 py-3 text-[11px] tracking-wider text-muted">
             カテゴリから探す
           </div>
-          {CATEGORIES.map((c) => (
+          {flatCats.map((c) => (
             <Link
-              key={c.id}
-              href={`/catalog?category=${c.id}`}
+              key={c.name}
+              href={catalogHrefL2(c.name)}
               onClick={closeAll}
               className="flex items-center justify-between border-b border-line px-5 py-3.5 text-[15px] text-sumi"
             >
-              {c.jp}
+              <span>
+                {c.name}
+                <span className="ml-2 font-dm text-[11px] text-muted">
+                  {c.count}
+                </span>
+              </span>
               <span className="text-muted">→</span>
             </Link>
           ))}
           {[
+            { href: "/categories", label: "すべてのカテゴリ" },
             { href: "/catalog", label: "すべての商品" },
             { href: "/contact", label: "掲載外商品のお問い合わせ" },
             { href: "/cart", label: "見積カート" },

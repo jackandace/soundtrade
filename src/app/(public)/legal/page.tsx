@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/public/Container";
 
 export const metadata: Metadata = {
@@ -9,17 +10,21 @@ export const metadata: Metadata = {
 
 const ROWS: Array<[string, React.ReactNode]> = [
   ["販売事業者", "株式会社ミツエス"],
-  ["運営統括責任者", "佐藤 しげ子"],
+  ["運営統括責任者", "新井 貴雄"],
   [
     "所在地",
     <>
       〒453-0801
       <br />
-      愛知県名古屋市中村区太閤5-9-9
+      愛知県名古屋市中村区太閤5-9-9 ミツエスビル
+      <br />
+      <span className="text-[12px] text-muted">
+        ※商品の直接受け渡しは行っておりませんので、ご了承ください。
+      </span>
     </>,
   ],
   ["電話番号", "052-451-1161（FAX 052-451-1164）"],
-  ["メールアドレス", "satot@mitsuesu.ne.jp"],
+  ["メールアドレス", "contact@mitsuesu-music.com"],
   [
     "販売価格",
     "各商品ページに定価（メーカー希望小売価格・税込）を参考表示しています。実際の卸価格は、見積依頼後に個別にご案内いたします。",
@@ -48,7 +53,10 @@ export default function LegalPage() {
     <div className="min-h-[70vh] bg-ivory">
       <Container className="pb-16 pt-8 md:pb-24 md:pt-16">
         <div className="mb-5 text-xs tracking-wider text-muted md:mb-8">
-          ホーム ／ 特定商取引法に基づく表記
+          <Link href="/" className="transition-colors hover:text-sumi hover:underline">
+            ホーム
+          </Link>
+          {" ／ 特定商取引法に基づく表記"}
         </div>
         <h1 className="mb-2 text-[26px] font-light tracking-[-0.01em] text-sumi md:text-[34px]">
           特定商取引法に基づく表記
