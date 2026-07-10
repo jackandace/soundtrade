@@ -5,9 +5,7 @@ import { Container } from "./Container";
 import { ImagePlaceholder } from "./ImagePlaceholder";
 
 // トップの「取扱カテゴリ」ショーケース（キュレーション）。
-// - name は実際の category_l2 と一致させること（/catalog?l2= のリンク先になる）。
-// - image を設定するとその画像を表示、未設定なら自動でプレースホルダー。
-//   画像素材が届いたら image に "/images/categories/<slug>.png" を入れるだけ。
+// name は実際の category_l2 と一致させること（/catalog?l2= のリンク先）。
 const SHOWCASE: Array<{ name: string; en: string; image?: string }> = [
   { name: "フルート", en: "Flute", image: "/images/categories/flute.png" },
   { name: "クラリネット", en: "Clarinet", image: "/images/categories/clarinet.png" },
@@ -39,33 +37,37 @@ export function CategoryGrid() {
             すべて見る →
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-px border border-line bg-line md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {SHOWCASE.map((c) => (
             <Link
               key={c.name}
               href={catalogHrefL2(c.name)}
-              className="flex flex-col items-center gap-3 bg-ivory px-3.5 py-6 transition-opacity duration-300 hover:opacity-75 md:px-6 md:py-9"
+              className="group block overflow-hidden rounded-sm border border-line bg-white transition-colors hover:border-sumi"
             >
-              <div className="w-[60px] md:w-20">
+              <div className="aspect-square w-full bg-white p-5 md:p-8">
                 {c.image ? (
-                  <div className="relative aspect-square overflow-hidden border border-line bg-white">
+                  <div className="relative h-full w-full">
                     <Image
                       src={c.image}
                       alt={c.name}
                       fill
-                      sizes="80px"
-                      className="object-contain"
+                      sizes="(max-width: 768px) 45vw, 22vw"
+                      className="object-contain transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 ) : (
-                  <ImagePlaceholder />
+                  <div className="flex h-full items-center justify-center">
+                    <div className="w-2/3">
+                      <ImagePlaceholder />
+                    </div>
+                  </div>
                 )}
               </div>
-              <div className="text-center">
+              <div className="border-t border-line px-3 py-3.5 text-center">
                 <div className="text-[13px] font-medium text-sumi md:text-sm">
                   {c.name}
                 </div>
-                <div className="mt-0.5 font-dm text-[9px] tracking-[0.1em] text-muted">
+                <div className="mt-0.5 font-dm text-[10px] tracking-[0.1em] text-muted">
                   {c.en.toUpperCase()}
                 </div>
               </div>
