@@ -15,7 +15,7 @@ const SHOWCASE: Array<{ name: string; en: string; image?: string }> = [
   { name: "金管楽器", en: "Brass", image: "/images/categories/brass.png" },
   { name: "トロンボーン", en: "Trombone", image: "/images/categories/trombone.png" },
   { name: "ホルン", en: "Horn", image: "/images/categories/horn.png" },
-  { name: "リコーダー", en: "Recorder" }, // recorder.png 未着→プレースホルダー
+  { name: "リコーダー", en: "Recorder", image: "/images/categories/recorder.png" },
   { name: "鍵盤ハーモニカ", en: "Melodica", image: "/images/categories/melodica.png" },
 ];
 
