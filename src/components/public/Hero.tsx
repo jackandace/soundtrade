@@ -3,8 +3,8 @@ import Image from "next/image";
 import { Container } from "./Container";
 import { ImagePlaceholder } from "./ImagePlaceholder";
 
-// メインビジュアル。素材が届いたら "/images/hero-main.jpg" を設定するだけ（未設定はプレースホルダー）。
-const HERO_IMAGE: string | undefined = undefined;
+// メインビジュアル。未設定ならプレースホルダーにフォールバック。
+const HERO_IMAGE: string | undefined = "/images/hero-main.png";
 
 export function Hero() {
   return (

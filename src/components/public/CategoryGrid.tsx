@@ -9,14 +9,14 @@ import { ImagePlaceholder } from "./ImagePlaceholder";
 // - image を設定するとその画像を表示、未設定なら自動でプレースホルダー。
 //   画像素材が届いたら image に "/images/categories/<slug>.png" を入れるだけ。
 const SHOWCASE: Array<{ name: string; en: string; image?: string }> = [
-  { name: "フルート", en: "Flute" }, // /images/categories/flute.png
-  { name: "クラリネット", en: "Clarinet" }, // clarinet.png
-  { name: "サクソフォン", en: "Saxophone" }, // saxophone.png
-  { name: "金管楽器", en: "Brass" }, // brass.png
-  { name: "トロンボーン", en: "Trombone" }, // trombone.png
-  { name: "ホルン", en: "Horn" }, // horn.png
-  { name: "リコーダー", en: "Recorder" }, // recorder.png
-  { name: "鍵盤ハーモニカ", en: "Melodica" }, // melodica.png
+  { name: "フルート", en: "Flute", image: "/images/categories/flute.png" },
+  { name: "クラリネット", en: "Clarinet", image: "/images/categories/clarinet.png" },
+  { name: "サクソフォン", en: "Saxophone", image: "/images/categories/saxophone.png" },
+  { name: "金管楽器", en: "Brass", image: "/images/categories/brass.png" },
+  { name: "トロンボーン", en: "Trombone", image: "/images/categories/trombone.png" },
+  { name: "ホルン", en: "Horn", image: "/images/categories/horn.png" },
+  { name: "リコーダー", en: "Recorder" }, // recorder.png 未着→プレースホルダー
+  { name: "鍵盤ハーモニカ", en: "Melodica", image: "/images/categories/melodica.png" },
 ];
 
 export function CategoryGrid() {
