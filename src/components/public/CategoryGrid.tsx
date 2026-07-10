@@ -1,19 +1,25 @@
 import Link from "next/link";
-import { topCategories, catalogHrefL2 } from "@/lib/categories";
-import { getCategoryNav } from "@/lib/categories-server";
+import Image from "next/image";
+import { catalogHrefL2 } from "@/lib/categories";
 import { Container } from "./Container";
 import { ImagePlaceholder } from "./ImagePlaceholder";
 
-// トップに出す主要カテゴリ件数（残りは「すべて見る」へ）
-const TOP_N = 8;
+// トップの「取扱カテゴリ」ショーケース（キュレーション）。
+// - name は実際の category_l2 と一致させること（/catalog?l2= のリンク先になる）。
+// - image を設定するとその画像を表示、未設定なら自動でプレースホルダー。
+//   画像素材が届いたら image に "/images/categories/<slug>.png" を入れるだけ。
+const SHOWCASE: Array<{ name: string; en: string; image?: string }> = [
+  { name: "フルート", en: "Flute" }, // /images/categories/flute.png
+  { name: "クラリネット", en: "Clarinet" }, // clarinet.png
+  { name: "サクソフォン", en: "Saxophone" }, // saxophone.png
+  { name: "金管楽器", en: "Brass" }, // brass.png
+  { name: "トロンボーン", en: "Trombone" }, // trombone.png
+  { name: "ホルン", en: "Horn" }, // horn.png
+  { name: "リコーダー", en: "Recorder" }, // recorder.png
+  { name: "鍵盤ハーモニカ", en: "Melodica" }, // melodica.png
+];
 
-export async function CategoryGrid() {
-  const nav = await getCategoryNav();
-  const primary = topCategories(nav, TOP_N);
-  const totalCount = nav.reduce((s, g) => s + g.children.length, 0);
-
-  if (primary.length === 0) return null;
-
+export function CategoryGrid() {
   return (
     <section className="border-t border-line bg-white">
       <Container className="py-16 md:py-24">
@@ -30,25 +36,37 @@ export async function CategoryGrid() {
             href="/categories"
             className="hidden shrink-0 border-b border-line-mid pb-0.5 text-sm text-sumi-light transition-colors hover:border-sumi hover:text-sumi md:inline-block"
           >
-            すべて見る（{totalCount}カテゴリ） →
+            すべて見る →
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-px border border-line bg-line md:grid-cols-4">
-          {primary.map((c) => (
+          {SHOWCASE.map((c) => (
             <Link
               key={c.name}
               href={catalogHrefL2(c.name)}
               className="flex flex-col items-center gap-3 bg-ivory px-3.5 py-6 transition-opacity duration-300 hover:opacity-75 md:px-6 md:py-9"
             >
               <div className="w-[60px] md:w-20">
-                <ImagePlaceholder />
+                {c.image ? (
+                  <div className="relative aspect-square overflow-hidden border border-line bg-white">
+                    <Image
+                      src={c.image}
+                      alt={c.name}
+                      fill
+                      sizes="80px"
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <ImagePlaceholder />
+                )}
               </div>
               <div className="text-center">
                 <div className="text-[13px] font-medium text-sumi md:text-sm">
                   {c.name}
                 </div>
-                <div className="mt-0.5 font-dm text-[10px] tracking-[0.08em] text-muted">
-                  {c.count}点
+                <div className="mt-0.5 font-dm text-[9px] tracking-[0.1em] text-muted">
+                  {c.en.toUpperCase()}
                 </div>
               </div>
             </Link>

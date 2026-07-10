@@ -1,6 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "./Container";
 import { ImagePlaceholder } from "./ImagePlaceholder";
+
+// メインビジュアル。素材が届いたら "/images/hero-main.jpg" を設定するだけ（未設定はプレースホルダー）。
+const HERO_IMAGE: string | undefined = undefined;
 
 export function Hero() {
   return (
@@ -32,11 +36,24 @@ export function Hero() {
           </div>
         </div>
         <div className="order-1 md:order-2">
-          <ImagePlaceholder
-            label="メインビジュアル / 楽器が一堂に並ぶ卸倉庫の実写真が入ります"
-            aspectClass="aspect-[4/3] md:aspect-square"
-            big
-          />
+          {HERO_IMAGE ? (
+            <div className="relative aspect-[4/3] overflow-hidden border border-line bg-white md:aspect-square">
+              <Image
+                src={HERO_IMAGE}
+                alt="楽器卸のミツエス メインビジュアル"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 600px"
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <ImagePlaceholder
+              label="メインビジュアル / 楽器が一堂に並ぶ卸倉庫の実写真が入ります"
+              aspectClass="aspect-[4/3] md:aspect-square"
+              big
+            />
+          )}
         </div>
       </Container>
     </section>
