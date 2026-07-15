@@ -30,7 +30,9 @@ export async function generateMetadata({
     .maybeSingle();
 
   if (!product) {
-    return { title: "商品が見つかりません" };
+    // generateMetadata でも notFound() を呼ぶことで HTTP 404 を正しく返す
+    // （ここで値を返すと status が 200 のまま＝ソフト404 になる Next.js の挙動対策）
+    notFound();
   }
 
   const parts = [product.category_l2, product.category_l3].filter(Boolean);
