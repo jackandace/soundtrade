@@ -14,6 +14,7 @@ const INQUIRY_STATUS: Record<string, { label: string; variant: StatusVariant }> 
   quoted: { label: "見積済", variant: "info" },
   completed: { label: "完了", variant: "success" },
   cancelled: { label: "キャンセル", variant: "neutral" },
+  archived: { label: "アーカイブ", variant: "neutral" },
 };
 
 const STATUS_TABS = [
@@ -23,6 +24,7 @@ const STATUS_TABS = [
   { id: "quoted", label: "見積済" },
   { id: "completed", label: "完了" },
   { id: "cancelled", label: "キャンセル" },
+  { id: "archived", label: "アーカイブ" },
 ];
 
 export default async function InquiriesListPage({
@@ -38,7 +40,10 @@ export default async function InquiriesListPage({
     .select("id, inquiry_number, company_name, contact_name, email, status, created_at, inquiry_items(id)")
     .order("created_at", { ascending: false });
 
-  if (selectedStatus !== "all" && INQUIRY_STATUS[selectedStatus]) {
+  if (selectedStatus === "all") {
+    // 「すべて」タブはアーカイブを除外（ノイズを隠す）
+    query = query.neq("status", "archived");
+  } else if (INQUIRY_STATUS[selectedStatus]) {
     query = query.eq("status", selectedStatus);
   }
 

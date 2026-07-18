@@ -16,7 +16,7 @@ export default async function InquiryDetailPage({
   const { data: inquiry, error } = await supabase
     .from("inquiries")
     .select(
-      "id, inquiry_number, status, company_name, contact_name, email, phone, desired_delivery, message, quoted_amount, quoted_at, internal_notes, created_at, updated_at",
+      "id, inquiry_number, status, customer_id, company_name, contact_name, email, phone, desired_delivery, message, quoted_amount, quoted_at, internal_notes, created_at, updated_at",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -34,13 +34,21 @@ export default async function InquiryDetailPage({
     <>
       <TopBar title="見積依頼 詳細" />
       <div className="flex flex-col gap-5 p-8">
-        <div className="text-admin-xs text-admin-inkMute">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
             href="/admin/inquiries"
-            className="underline-offset-2 hover:underline"
+            className="text-admin-xs text-admin-inkMute underline-offset-2 hover:underline"
           >
             ← 見積依頼一覧に戻る
           </Link>
+          {inquiry.customer_id && (
+            <Link
+              href={`/admin/customers/${inquiry.customer_id}`}
+              className="flex min-h-9 items-center gap-1.5 rounded-md border border-admin-line px-3 text-admin-sm font-medium text-admin-ink hover:bg-admin-surfaceAlt"
+            >
+              この顧客の履歴・ブロック設定を見る →
+            </Link>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">

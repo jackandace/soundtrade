@@ -10,6 +10,7 @@ const STATUS_OPTIONS: Array<[string, string]> = [
   ["quoted", "見積済"],
   ["completed", "完了"],
   ["cancelled", "キャンセル"],
+  ["archived", "アーカイブ"],
 ];
 
 type Props = {

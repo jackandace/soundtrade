@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
-const VALID_STATUSES = ["new", "in_progress", "quoted", "completed", "cancelled"] as const;
+const VALID_STATUSES = ["new", "in_progress", "quoted", "completed", "cancelled", "archived"] as const;
 
 export type UpdateInquiryArgs = {
   id: string;
