@@ -59,3 +59,8 @@ update public.inquiries i
 set customer_id = c.id
 from public.customers c
 where lower(btrim(i.email)) = c.email and i.customer_id is null;
+
+-- inquiries.status に archived を許可（アーカイブ機能のため）
+alter table public.inquiries drop constraint if exists inquiries_status_check;
+alter table public.inquiries add constraint inquiries_status_check
+  check (status in ('new','in_progress','quoted','completed','cancelled','archived'));
