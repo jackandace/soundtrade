@@ -9,7 +9,6 @@ import {
   SITE_KEYWORDS,
 } from "@/lib/seo";
 import { OrganizationJsonLd } from "@/components/json-ld/Organization";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 const notoSansJp = Noto_Sans_JP({
@@ -61,7 +60,6 @@ export default function RootLayout({
       <body className="bg-ivory font-sans text-sumi antialiased">
         <OrganizationJsonLd />
         {children}
-        <GoogleAnalytics />
       </body>
     </html>
   );
