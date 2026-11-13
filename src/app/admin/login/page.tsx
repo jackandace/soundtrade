@@ -2,29 +2,15 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { AuthAlert, AuthShell } from "@/components/admin/AuthShell";
 import { loginAction } from "./actions";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<LoginShell />}>
+    <Suspense fallback={<AuthShell />}>
       <LoginForm />
     </Suspense>
-  );
-}
-
-function LoginShell({ children }: { children?: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-admin-bg px-5 py-12">
-      <div className="w-full max-w-[420px] rounded-lg border border-admin-line bg-admin-surface p-8 md:p-10">
-        <div className="mb-8 text-center">
-          <div className="text-xl font-bold tracking-[0.04em] text-admin-ink">
-            楽器卸のミツエス
-          </div>
-          <div className="mt-1 text-admin-xs text-admin-inkMute">管理画面</div>
-        </div>
-        {children}
-      </div>
-    </div>
   );
 }
 
@@ -32,6 +18,7 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/admin/dashboard";
+  const justReset = params.get("reset") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,8 +45,13 @@ function LoginForm() {
   };
 
   return (
-    <LoginShell>
+    <AuthShell>
       <form onSubmit={onSubmit} className="grid gap-5">
+        {justReset && (
+          <AuthAlert tone="success">
+            パスワードを再設定しました。新しいパスワードでログインしてください。
+          </AuthAlert>
+        )}
         <div>
           <label className="mb-2 block text-admin-sm font-medium text-admin-ink">
             メールアドレス
@@ -107,7 +99,13 @@ function LoginForm() {
         >
           {submitting ? "ログイン中..." : "ログイン"}
         </button>
+        <Link
+          href="/admin/forgot-password"
+          className="text-center text-admin-sm text-admin-navy underline"
+        >
+          パスワードをお忘れの方
+        </Link>
       </form>
-    </LoginShell>
+    </AuthShell>
   );
 }
