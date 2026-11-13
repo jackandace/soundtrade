@@ -20,6 +20,10 @@ function resolveOrigin(): string {
   if (!host) return fallback;
 
   const allowed = new Set<string>(["soundtrade.vercel.app"]);
+  // Vercel が自動で設定するこのデプロイ自身のホスト（プレビュー環境での確認用）
+  for (const v of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]) {
+    if (v) allowed.add(v);
+  }
   try {
     const siteHost = new URL(fallback).host;
     allowed.add(siteHost);
